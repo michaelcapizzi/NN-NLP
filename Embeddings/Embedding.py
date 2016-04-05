@@ -7,7 +7,7 @@ class Embedding_keras:
     builds the embedding layer to be used
     """
 
-    def __init__(self, loadW2V=False, gensimW2Vclass=None, vocabSize=None, w2vDimension=300, W_regularizer=None, W_constraint=None, activity_regularizer=None, mask_zero=False, input_length=None, dropout=0):
+    def __init__(self, loadW2V=False, gensimW2Vclass=None, vocabSize=None, w2vDimension=300, W_regularizer=None, W_constraint=None, activity_regularizer=None, mask_zero=True, input_length=None, dropout=0):
         #hyper-parameters
         self.vocabSize = vocabSize
         self.dimension = w2vDimension
@@ -50,12 +50,19 @@ class Embedding_keras:
             vocab = self.gensimW2Vclass.index2word
 
             #build embedding weights matrix
-            self.weights = np.zeros((self.vocabSize, self.dimension))       #TODO confirm this is correct for masking
+            if self.mask_zero:
+                self.weights = np.zeros((self.vocabSize+1, self.dimension))       #TODO confirm this is correct for masking
+                #populate weights
+                    #TODO confirm this is correct for masking
+                for i in range(len(vocab) + 1):
+                    self.weights[i + 1,:] = self.gensimW2Vclass[vocab[i]]       #populate each row in weight matrix with the pretrained vector
+            else:
+                self.weights = np.zeros((self.vocabSize, self.dimension))
+                #populate weights
+                for i in range(len(vocab)):
+                    self.weights[i,:] = self.gensimW2Vclass[vocab[i]]           #populate each row in weight matrix with the pretrained vector
 
-            #populate weights
-            #TODO confirm this is correct for masking
-            for i in vocab:
-                self.weights[i + 1,:] = self.gensimW2Vclass[vocab[i]]       #populate each row in weight matrix with the pretrained vector
+
 
             #build layer
             self.layer = embeddings.Embedding(
@@ -68,8 +75,11 @@ class Embedding_keras:
                     activity_regularizer=self.activity_regularizer,
                     mask_zero=self.mask_zero,
                     dropout=self.dropout,
-                    weights=self.weights
+                    weights=[self.weights]
             )
 
 
+z = embeddings.Embedding(10, 200, init="uniform", mask_zero=False, dropout=0.0)
+
+z.get_weights()
 
