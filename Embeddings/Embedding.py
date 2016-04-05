@@ -31,7 +31,7 @@ class Embedding_keras:
         if self.loadW2V:
             self.layer = embeddings.Embedding(
                     input_dim=self.vocabSize,
-                    output_dim=self.w2vDimension,
+                    output_dim=self.dimension,
                     init="uniform",
                     input_length=self.input_length,
                     W_regularizer=self.W_regularizer,
