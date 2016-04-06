@@ -4,7 +4,7 @@ import numpy as np
 
 class Embedding_keras:
     """
-    builds the embedding layer to be used
+    builds the embedding layer to be used and updated during training
     """
 
     def __init__(self, loadW2V=False, gensimW2Vclass=None, vocabSize=None, w2vDimension=300, W_regularizer=None, W_constraint=None, activity_regularizer=None, mask_zero=True, input_length=None, dropout=0):
@@ -28,7 +28,7 @@ class Embedding_keras:
 
     def build(self):
         #if randomly initializing word embedding layer
-        if self.loadW2V:
+        if not self.loadW2V:
             self.layer = embeddings.Embedding(
                     input_dim=self.vocabSize,
                     output_dim=self.dimension,
