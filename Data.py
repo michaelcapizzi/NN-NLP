@@ -1,10 +1,14 @@
 import Utils.PreProcessing as pre
+import re
+import itertools
 
 class Data():
 
-    def __init__(self, filepath, lineSeparated=False):
+    def __init__(self, filepath, lineSeparated=False, filterPunctuation=True, lowerCase=True):
         self.filepath = filepath
         self.lineSeparated = lineSeparated
+        self.filterPunctuation = filterPunctuation
+        self.lowerCase = lowerCase
         self.p = None
         self.lines = None
         self.rawSents = []
@@ -56,8 +60,21 @@ class Data():
 
 
     def getTokenizedWords(self):
-        self.seqWords = [self.rawSents[i].words for i in range(len(self.rawSents))]
+        if self.lowerCase:
+            self.seqWords = [[self.rawSents[i].words[j].lower() for j in range(len(self.rawSents[i].words))] for i in range(len(self.rawSents))]
+        else:
+            self.seqWords = [self.rawSents[i].words for i in range(len(self.rawSents))]
+
+        if self.filterPunctuation:
+            regex = '[^A-z0-9\']'
+            self.seqWords = [list(itertools.ifilter(lambda x: not re.match(regex, x), self.seqWords[i])) for i in range(len(self.seqWords))]
+
+
 
 
     def getTokenizedLemmas(self):
         self.seqLemmas = [self.rawSents[i].lemmas for i in range(len(self.rawSents))]
+
+        if self.filterPunctuation:
+            regex = '[^A-z0-9\']'
+            self.seqLemmas = [list(itertools.ifilter(lambda x: not re.match(regex, x), self.seqLemmas[i])) for i in range(len(self.seqLemmas))]
