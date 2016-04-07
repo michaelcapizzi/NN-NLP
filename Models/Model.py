@@ -79,6 +79,7 @@ array([[ 0.06752004,  0.06681924,  0.06783251,  0.06644987,  0.06461859,
 #stateful
 #I think what I want, but not sure how to make it work
 http://keras.io/faq/#how-can-i-use-stateful-rnns
+https://www.reddit.com/r/MachineLearning/comments/3dqdqr/keras_lstm_limitations/
 >>> from keras.layers import LSTM, Dense
 >>> import numpy as np
 >>> w2v_dimension=8
