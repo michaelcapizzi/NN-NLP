@@ -2,13 +2,12 @@ import Utils.PreProcessing as pre
 
 class Data():
 
-    def __init__(self, filepath, lineSeparated):
+    def __init__(self, filepath, lineSeparated=False):
         self.filepath = filepath
         self.lineSeparated = lineSeparated
-        self.annotatedLines = []
         self.p = None
         self.lines = None
-        self.rawSents = None
+        self.rawSents = []
         self.seqWords = []
         self.seqLemmas = []
 
@@ -16,6 +15,10 @@ class Data():
     def startServer(self):
         self.p = pre.initializeProcessor()
         pre.startServer(self.p)
+
+
+    def stopServer(self):
+        self.p.__del__()
 
 
     def annotateText(self):
@@ -31,7 +34,7 @@ class Data():
                 #annotate
                 annotated = pre.annotate(self.p, clean)
                 #add to list of lines
-                self.annotatedLines.append(annotated)
+                self.rawSents.append(annotated)
         #if not one sentence per line
         else:
             #open
@@ -47,7 +50,7 @@ class Data():
                 sentences = annotated.sentences
                 #add each sentence to list of lines
                 for sent in sentences:
-                    self.annotatedLines.append(sent)
+                    self.rawSents.append(sent)
 
         f.close()
 

@@ -6,17 +6,17 @@ Currently not using preprocessing methods available in keras.  Using pyprocessor
 
 #initialize a processor
 def initializeProcessor():
-    Processor(port=8886)
+    return Processor(port=8886)
 
 
 #start server
 def startServer(proc):
-    proc.start_server(jarpath="processors-server.jar", port=8886)
+    proc.start_server(jar_path="processors-server.jar")
 
 
 #annotate text
 def annotate(proc, text):
-    proc.annotate(text)
+    return proc.annotate(text)
 
 
 
