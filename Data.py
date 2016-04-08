@@ -14,6 +14,10 @@ class Data():
         self.rawSents = []
         self.seqWords = []
         self.seqLemmas = []
+        self.vocWordToIDX = {}
+        self.vocLemmaToIDX = {}
+        self.vocIDXtoWord = {}
+        self.vocIDXtoLemma = {}
 
 
     def startServer(self):
@@ -59,24 +63,45 @@ class Data():
         f.close()
 
 
-    def getTokenizedWords(self):
-        if self.lowerCase:
-            self.seqWords = [[self.rawSents[i].words[j].lower() for j in range(len(self.rawSents[i].words))] for i in range(len(self.rawSents))]
-        else:
-            self.seqWords = [self.rawSents[i].words for i in range(len(self.rawSents))]
+    #filter punctuation as iterating
+    def getTokenized(self):
+        cWord = 0
+        cLemma = 0
+        #add sentences to list and words to vocabulary
+        for sent in self.rawSents:
+            sentWordBuffer = []
+            sentLemmaBuffer = []
+            words = sent.words
+            lemmas = sent.lemmas
+            for i in range(len(sent.words)):
+                word = words[i]
+                lemma = lemmas[i]
+                if self.lowerCase:
+                    sentWordBuffer.append(word.lower())
+                    if word.lower() not in self.vocWordToIDX:
+                        cWord += 1
+                        self.vocWordToIDX[word.lower()] = cWord
+                        self.vocIDXtoWord[cWord] = word.lower()
+                else:
+                    sentWordBuffer.append(word)
+                    if word not in self.vocWordToIDX:
+                        cWord += 1
+                        self.vocWordToIDX[word] = cWord
+                        self.vocIDXtoWord[cWord] = word
+                sentLemmaBuffer.append(lemma.lower())
+                if lemma not in self.vocLemmaToIDX:
+                    cLemma += 1
+                    self.vocLemmaToIDX[lemma] = cLemma
+                    self.vocIDXtoLemma[cLemma] = lemma
+            self.seqWords.append(sentWordBuffer)
+            self.seqLemmas.append(sentLemmaBuffer)
 
+        #TODO do this step as iterating through words!!!
+        #filter punctuation
         if self.filterPunctuation:
             regex = '[^A-z0-9\']'
             self.seqWords = [list(itertools.ifilter(lambda x: not re.match(regex, x) and x != "'", self.seqWords[i])) for i in range(len(self.seqWords))]
-
-
-
-
-    def getTokenizedLemmas(self):
-        self.seqLemmas = [self.rawSents[i].lemmas for i in range(len(self.rawSents))]
-
-        if self.filterPunctuation:
-            regex = '[^A-z0-9\']'
             self.seqLemmas = [list(itertools.ifilter(lambda x: not re.match(regex, x) and x != "'", self.seqLemmas[i])) for i in range(len(self.seqLemmas))]
+
 
 
