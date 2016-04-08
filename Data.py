@@ -67,7 +67,6 @@ class Data():
 
         if self.filterPunctuation:
             regex = '[^A-z0-9\']'
-            # self.seqWords = [list(itertools.ifilter(lambda x: not re.match(regex, x), self.seqWords[i])) for i in range(len(self.seqWords))]
             self.seqWords = [list(itertools.ifilter(lambda x: not re.match(regex, x) and x != "'", self.seqWords[i])) for i in range(len(self.seqWords))]
 
 
@@ -78,7 +77,6 @@ class Data():
 
         if self.filterPunctuation:
             regex = '[^A-z0-9\']'
-            # self.seqLemmas = [list(itertools.ifilter(lambda x: not re.match(regex, x), self.seqLemmas[i])) for i in range(len(self.seqLemmas))]
             self.seqLemmas = [list(itertools.ifilter(lambda x: not re.match(regex, x) and x != "'", self.seqLemmas[i])) for i in range(len(self.seqLemmas))]
 
 
