@@ -69,26 +69,38 @@ class Data():
         cLemma = 0
         #add sentences to list and words to vocabulary
         for sent in self.rawSents:
+            #list to house sentences of words
             sentWordBuffer = []
+            #list to house sentences of lemmas
             sentLemmaBuffer = []
+            #isolate the words
             words = sent.words
+            #isolate the lemmas
             lemmas = sent.lemmas
+            #iterate through each word
             for i in range(len(sent.words)):
                 word = words[i]
                 lemma = lemmas[i]
+                #if converting to lower case
                 if self.lowerCase:
+                    #add the word to the sentence buffer
                     sentWordBuffer.append(word.lower())
+                    #build indices
                     if word.lower() not in self.vocWordToIDX:
                         cWord += 1
                         self.vocWordToIDX[word.lower()] = cWord
                         self.vocIDXtoWord[cWord] = word.lower()
                 else:
+                    #add the word to the sentence buffer
                     sentWordBuffer.append(word)
+                    #build indices
                     if word not in self.vocWordToIDX:
                         cWord += 1
                         self.vocWordToIDX[word] = cWord
                         self.vocIDXtoWord[cWord] = word
+                #add to sentence buffer
                 sentLemmaBuffer.append(lemma.lower())
+                #build indices
                 if lemma not in self.vocLemmaToIDX:
                     cLemma += 1
                     self.vocLemmaToIDX[lemma] = cLemma
@@ -96,7 +108,6 @@ class Data():
             self.seqWords.append(sentWordBuffer)
             self.seqLemmas.append(sentLemmaBuffer)
 
-        #TODO do this step as iterating through words!!!
         #filter punctuation
         if self.filterPunctuation:
             regex = '[^A-z0-9\']'
