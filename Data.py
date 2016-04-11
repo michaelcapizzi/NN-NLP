@@ -2,6 +2,7 @@ import Utils.PreProcessing as pre
 import re
 import itertools
 
+
 class Data():
 
     def __init__(self, filepath, lineSeparated=False, filterPunctuation=True, lowerCase=True):
@@ -10,7 +11,6 @@ class Data():
         self.filterPunctuation = filterPunctuation
         self.lowerCase = lowerCase
         self.p = None
-        self.lines = None
         self.rawSents = []
         self.seqWords = []
         self.seqLemmas = []

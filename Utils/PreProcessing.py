@@ -1,4 +1,5 @@
 from processors import *
+import numpy as np
 
 """
 Currently not using preprocessing methods available in keras.  Using pyprocessors [https://github.com/myedibleenso/py-processors]
@@ -42,7 +43,16 @@ def sortBySeqLength(seqs):
     return dict
 
 
+#get word vector
+def getVector(word, gensimModel, w2vDim):
+    if word in gensimModel:
+        return gensimModel[word]
+    else:
+        return np.zeros(w2vDim)
 
+
+def convertSentenceToVec(listOfWords, gensimModel, w2vDim):
+    return [getVector(word, gensimModel, w2vDim) for word in listOfWords]
 
 
 

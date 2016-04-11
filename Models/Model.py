@@ -39,6 +39,8 @@ class LSTM_keras:
         self.model.add(Dense(vocSize))
         self.model.add(Activation("softmax"))
 
+    # def train
+
 """
 #only generates cost at end of sequence
 #can only generate a prediction for word at N + 1 (where N is length of sentence)
@@ -78,7 +80,6 @@ array([[ 0.06752004,  0.06681924,  0.06783251,  0.06644987,  0.06461859,
 
 #stateful
 #I think what I want, but not sure how to make it work
-http://keras.io/faq/#how-can-i-use-stateful-rnns
 https://www.reddit.com/r/MachineLearning/comments/3dqdqr/keras_lstm_limitations/
 >>> from keras.layers import LSTM, Dense
 >>> import numpy as np
@@ -92,5 +93,24 @@ I tensorflow/core/common_runtime/local_device.cc:40] Local device intra op paral
 I tensorflow/core/common_runtime/direct_session.cc:58] Direct session inter op parallelism threads: 8
 >>> model.add(Dense(voc_size, activation="softmax"))
 >>> model.compile(loss="binary_crossentropy", optimizer="rmsprop")
+
+example: https://github.com/fchollet/keras/blob/master/examples/lstm_text_generation.py
+
+http://keras.io/faq/#how-can-i-use-stateful-rnns
+
+X # this is our input data, of shape (32, 21, 16)   (batch size, length of sequence, vector size)
+# we will feed it to our model in sequences of length 10
+model = Sequential()
+model.add(LSTM(32, batch_input_shape=(32, 10, 16), stateful=True))
+model.add(Dense(16, activation='softmax'))
+model.compile(optimizer='rmsprop', loss='categorical_crossentropy')
+# we train the network to predict the 11th timestep given the first 10:
+model.train_on_batch(X[:, :10, :], np.reshape(X[:, 10, :], (32, 16)))
+# the state of the network has changed. We can feed the follow-up sequences:
+model.train_on_batch(X[:, 10:20, :], np.reshape(X[:, 20, :], (32, 16)))
+# let's reset the states of the LSTM layer:
+model.reset_states()
+# another way to do it in this case:
+model.layers[0].reset_states()
 
 """
