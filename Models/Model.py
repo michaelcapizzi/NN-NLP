@@ -18,10 +18,15 @@ class LSTM_keras:
             self.w2vDimension = embeddingLayer.w2vDimension
             #build the embedding layer
             self.model.add(embeddingLayer)
+            #note: masking layer not needed here as it is handled in embedding layer
         else:
             #get the dimensions from the arguments
             #TODO what is this used for?
             self.w2vDimension = w2vDimension
+            #manually add a masking layer (to handle variable length of sequences)
+                #http://keras.io/layers/core/#masking
+            self.model.add(Masking(mask_value=0.0))
+        #add the LSTM layer
         self.model.add(LSTM(
                             # input_shape=(None,w2vDimension),              #can this be None?
                             input_shape=(max_seq_length, w2vDimension),     #should allow for different batch sizes and required when the first layer of an architecture
