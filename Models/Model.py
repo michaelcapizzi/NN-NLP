@@ -83,8 +83,8 @@ array([[ 0.06752004,  0.06681924,  0.06783251,  0.06644987,  0.06461859,
          0.06652912,  0.06606538,  0.06768672,  0.06832125,  0.06933279,
          0.06447952,  0.06615783,  0.06422815,  0.06747453,  0.06648442]])
 
+
 #stateful
-#I think what I want, but not sure how to make it work
 https://www.reddit.com/r/MachineLearning/comments/3dqdqr/keras_lstm_limitations/
 >>> from keras.layers import LSTM, Dense
 >>> import numpy as np
@@ -99,10 +99,11 @@ I tensorflow/core/common_runtime/direct_session.cc:58] Direct session inter op p
 >>> model.add(Dense(voc_size, activation="softmax"))
 >>> model.compile(loss="binary_crossentropy", optimizer="rmsprop")
 
+
 example: https://github.com/fchollet/keras/blob/master/examples/lstm_text_generation.py
 
-http://keras.io/faq/#how-can-i-use-stateful-rnns
 
+http://keras.io/faq/#how-can-i-use-stateful-rnns
 X # this is our input data, of shape (32, 21, 16)   (batch size, length of sequence, vector size)
 # we will feed it to our model in sequences of length 10
 model = Sequential()
