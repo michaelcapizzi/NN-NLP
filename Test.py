@@ -118,19 +118,18 @@ for i in range(num_epochs):
         samples = lemmaVectorsBatched[k]
         #add last example to testing set and train on all the rest
         if len(samples) > 1:
-            for_training = lemmaVectorsBatched[k][0:-1]
-            test_set.append(lemmaVectorsBatched[k][-1])
+            for_training = samples[0:-1]
+            test_set.append(samples[-1])
         else:
-            for_training = lemmaVectorsBatched[k]
+            for_training = samples
         #iterate through all training examples
         for x in for_training:
-            print("x", x)
             #loop through each word in the sequence, with an X of current word (j) and y of next word (j + 1)
             for j in range(max_sentence_length-1):
                 print("j", j)
                 print("training item shape", str(x[j].shape))
-                print("item", str(x[j]))
-                model.train_on_batch(x[j], x[j+1], accuracy=True)
+                #TODO figure out the dimensions required here
+                model.train_on_batch(x[j].reshape((1,1,w2v_dimension)), x[j+1].reshape((1,w2v_dimension)), accuracy=True)
             #at the end of the sequence reset the states
             model.reset_states()
             # model.layers[1].reset_states()        #this is safer if I'm sure which layer is the LSTM
