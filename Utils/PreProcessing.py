@@ -44,6 +44,7 @@ def sortBySeqLength(seqs):
     return dict
 
 
+#pad all sentences to length of longest sentence
 def padToLongest(dictOfSeqs, w2vDim):
     #get lengths from dictionary
     keys = dictOfSeqs.keys()
@@ -69,6 +70,12 @@ def padToLongest(dictOfSeqs, w2vDim):
     return new_dict
 
 
+#pad single sentence (of word vectors) to arbitrary length
+def padToConstant(sentence, w2vDim, maxLength):
+    #pad sentence
+    for i in range(maxLength-len(sentence)):
+        sentence.append(np.zeros(w2vDim))
+
 
 #get word vector
 def getVector(word, gensimModel, w2vDim):
@@ -78,6 +85,7 @@ def getVector(word, gensimModel, w2vDim):
         return np.zeros(w2vDim)
 
 
+#convert a list of words to list of word embeddings
 def convertSentenceToVec(listOfWords, gensimModel, w2vDim):
     return [getVector(word, gensimModel, w2vDim) for word in listOfWords]
 

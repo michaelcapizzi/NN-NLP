@@ -51,9 +51,9 @@ class Embedding_keras:
 
             #build embedding weights matrix
             if self.mask_zero:
-                self.weights = np.zeros((self.vocabSize+1, self.dimension))       #TODO confirm this is correct for masking
+                self.weights = np.zeros((self.vocabSize+1, self.dimension))        #TODO confirm this is correct for masking
                 #populate weights
-                    #TODO confirm this is correct for masking
+                #TODO confirm this is correct for masking
                 for i in range(len(vocab) + 1):
                     self.weights[i + 1,:] = self.gensimW2Vclass[vocab[i]]       #populate each row in weight matrix with the pretrained vector
             else:
