@@ -146,7 +146,7 @@ for test_item in test_set:
         #get closest word
         closest_word = data.vocIDXtoLemma[idx]
         #real next word
-        real_word = w2v.most_similar(positive=[test_item[m+1]], topn=1)
+        real_word = w2v.most_similar(positive=[test_item[m+1]], topn=1)[0][0]
         sentence.append(closest_word)
         print("given: ", sentence)
         print("predicted: ", closest_word)
