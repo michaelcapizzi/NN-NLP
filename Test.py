@@ -139,22 +139,27 @@ for test_item in test_set:
     results = []
     #iterate through each word predicting the next word
     for m in range(max_sentence_length-1):
-        #distribution predicted from softmax
-        distribution = model.predict_on_batch(test_item[m].reshape(1,1,w2v_dimension))
-        #get index of most likely
-        idx = np.argmax(distribution)
-        #get closest word
-        closest_word = data.vocIDXtoLemma[idx]
-        #real next word
-        real_word = w2v.most_similar(positive=[test_item[m+1]], topn=1)[0][0]
-        sentence.append(closest_word)
-        print("given: ", sentence)
-        print("predicted: ", closest_word)
-        print("actual: ", real_word)
-        if real_word == closest_word:
-            results.append(1)
+        #bail on sentence when the next word is np.zeros
+        #either because it's padding or not in the W2V vectors
+        if np.all(test_item[m] != np.zeros(w2v_dimension)):
+            #distribution predicted from softmax
+            distribution = model.predict_on_batch(test_item[m].reshape(1,1,w2v_dimension))
+            #get index of most likely
+            idx = np.argmax(distribution)
+            #get closest word
+            closest_word = data.vocIDXtoLemma[idx]
+            #real next word
+            real_word = w2v.most_similar(positive=[test_item[m+1]], topn=1)[0][0]
+            sentence.append(closest_word)
+            print("given: ", sentence)
+            print("predicted: ", closest_word)
+            print("actual: ", real_word)
+            if real_word == closest_word:
+                results.append(1)
+            else:
+                results.append(0)
         else:
-            results.append(0)
+            break
     print("final sentence: ", sentence)
     print("accuracy: ", str(float(results.count(1)) / float(len(results))))
 
