@@ -69,7 +69,7 @@ print("building LSTM")
 #masking layer to handle variable lengths
     #all items are padded to max_sentence_length
     #batch_input_shape must be provided to first layer
-model.add(Masking(mask_value=0.0, batch_input_shape=(1,1,w2v_dimension)))
+model.add(Masking(mask_value=np.zeros(w2v_dimension), batch_input_shape=(1,1,w2v_dimension)))
 #lstm layer
     #shape = batch size of 1, and update weights after each word
     #batch_input_shape was provided at first (Masking) layer
@@ -108,15 +108,22 @@ for i in range(num_epochs):
             #loop through each word in the sequence, with an X of current word (j) and y of next word (j + 1)
             for j in range(max_sentence_length-1):
                 jPlus1 = w2v.most_similar(positive=[x[j+1]], topn=1)[0][0]
-                print("j", j)
-                print("training item shape", str(x[j].shape))
-                print("word at j + 1", jPlus1)
-                print("index at j + 1", data.vocLemmaToIDX[jPlus1])
-                gold = np.zeros(voc_size)
-                gold[data.vocLemmaToIDX[jPlus1]] = 1.0
-                print("one hot for j + 1", gold)
-                print("one hot for j + 1 shape", gold.shape)
-                model.train_on_batch(x[j].reshape((1,1,w2v_dimension)), gold.reshape((1,voc_size)), accuracy=True)
+                #bail on sentence when the next word is np.zeros
+                    #either because it's padding or not in the W2V vectors
+                if np.all(x[j+1] != np.zeros(w2v_dimension)):
+                    print("j", j)
+                    # print("training item shape", str(x[j].shape))
+                    print("vector at j + 1", x[j+1])
+                    print("shape of vector at j + 1", x[j+1].shape)
+                    print("word at j + 1", jPlus1)
+                    print("index at j + 1", data.vocLemmaToIDX[jPlus1])
+                    gold = np.zeros(voc_size)
+                    gold[data.vocLemmaToIDX[jPlus1]] = 1.0
+                    print("one hot for j + 1", gold)
+                    # print("one hot for j + 1 shape", gold.shape)
+                    model.train_on_batch(x[j].reshape((1,1,w2v_dimension)), gold.reshape((1,voc_size)), accuracy=True)
+                else:
+                    break
             #at the end of the sequence reset the states
             model.reset_states()
             # model.layers[1].reset_states()        #this is safer if I'm sure which layer is the LSTM
@@ -133,7 +140,7 @@ for test_item in test_set:
     #iterate through each word predicting the next word
     for m in range(max_sentence_length-1):
         #distribution predicted from softmax
-        distribution = model.predict_on_batch(test_item[m])
+        distribution = model.predict_on_batch(test_item[m].reshape(1,1,w2v_dimension))
         #get index of most likely
         idx = np.argmax(distribution)
         #get closest word

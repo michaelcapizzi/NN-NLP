@@ -101,10 +101,10 @@ class Data():
                 #add to sentence buffer
                 sentLemmaBuffer.append(lemma.lower())
                 #build indices
-                if lemma not in self.vocLemmaToIDX:
+                if lemma.lower() not in self.vocLemmaToIDX:
                     cLemma += 1
-                    self.vocLemmaToIDX[lemma] = cLemma
-                    self.vocIDXtoLemma[cLemma] = lemma
+                    self.vocLemmaToIDX[lemma.lower()] = cLemma
+                    self.vocIDXtoLemma[cLemma] = lemma.lower()
             self.seqWords.append(sentWordBuffer)
             self.seqLemmas.append(sentLemmaBuffer)
 
