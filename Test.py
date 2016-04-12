@@ -12,14 +12,6 @@ from multiprocessing import Process
 #sys.argv[3] = word2vec file
 
 
-# #for multiprocessing
-# def f1():
-#     global w2v
-#     w2v = g.Word2Vec.load_word2vec_format(sys.argv[3], binary=False)
-#
-# def f2():
-#     data.startServer()
-
 #get embeddings
 print("loading embeddings")
 # w2v = g.Word2Vec()
@@ -33,13 +25,6 @@ else:
     # global data
     data = d.Data(filepath=sys.argv[1])
 
-# #for multiprocessing
-# p1 = Process(target=f1)
-# p1.start()
-# p2 = Process(target=f2)
-# p2.start()
-# p1.join()
-# p2.join()
 
 data.startServer()
 print("annotating text")
@@ -51,9 +36,7 @@ w2vSize = len(w2v["the"])
 
 #convert to vectors
 print("converting sentences to vectors")
-# wordVectors = [pre.getVector(word, w2v, w2vSize) for word in data.seqWords[i] for i in range(len(data.seqWords))]
 wordVectors = [pre.convertSentenceToVec(sentence, w2v, w2vSize) for sentence in data.seqWords]
-# lemmaVectors = [pre.getVector(lemma, w2v, w2vSize) for lemma in data.seqLemmas[i] for i in range(len(data.seqLemmas))]
 lemmaVectors = [pre.convertSentenceToVec(sentence, w2v, w2vSize) for sentence in data.seqLemmas]
 
 #sort sequences into batches of same length
@@ -68,10 +51,6 @@ lemmaVectorsBatched = pre.padToLongest(lemmaVectorsBatched, w2vSize)
 
 key = lemmaVectorsBatched.keys()[0]
 
-# print("lemma", len(lemmaVectorsBatched[key][0]))
-# print("word", len(wordVectorsBatched[key][0]))
-# print("lemma", lemmaVectorsBatched[key][0])
-# print("word", wordVectorsBatched[key][0])
 
 #build the LSTM with static (not updated during training) vectors
 model = Sequential()
@@ -101,7 +80,8 @@ model.add(LSTM(output_dim=c_size, return_sequences=False, stateful=True, batch_i
 model.add(Dense(output_dim=voc_size, activation="softmax"))
 
 
-model.compile(loss="binary_crossentropy", optimizer="rmsprop")
+# model.compile(loss="binary_crossentropy", optimizer="rmsprop")
+model.compile(loss="mse", optimizer="rmsprop")
 
 model.summary()
 
@@ -128,7 +108,11 @@ for i in range(num_epochs):
             for j in range(max_sentence_length-1):
                 print("j", j)
                 print("training item shape", str(x[j].shape))
+                print("j + 1", j+1)
+                print("j + 1 shape", str(x[j+1].shape))
+                print("vocabulary size", voc_size)
                 #TODO figure out the dimensions required here
+                    #TODO y needs to be the argmax of the vocabulary size
                 model.train_on_batch(x[j].reshape((1,1,w2v_dimension)), x[j+1].reshape((1,w2v_dimension)), accuracy=True)
             #at the end of the sequence reset the states
             model.reset_states()
