@@ -81,7 +81,8 @@ model.add(Dense(output_dim=voc_size, activation="softmax"))
 
 
 # model.compile(loss="binary_crossentropy", optimizer="rmsprop")
-model.compile(loss="mse", optimizer="rmsprop")
+# model.compile(loss="mse", optimizer="rmsprop")
+model.compile(loss="categorical_crossentropy", optimizer="rmsprop")
 
 model.summary()
 
@@ -106,14 +107,16 @@ for i in range(num_epochs):
         for x in for_training:
             #loop through each word in the sequence, with an X of current word (j) and y of next word (j + 1)
             for j in range(max_sentence_length-1):
+                jPlus1 = w2v.most_similar(positive=[x[j+1]], topn=1)[0][0]
                 print("j", j)
                 print("training item shape", str(x[j].shape))
-                print("j + 1", j+1)
-                print("j + 1 shape", str(x[j+1].shape))
-                print("vocabulary size", voc_size)
-                #TODO figure out the dimensions required here
-                    #TODO y needs to be the argmax of the vocabulary size
-                model.train_on_batch(x[j].reshape((1,1,w2v_dimension)), x[j+1].reshape((1,w2v_dimension)), accuracy=True)
+                print("word at j + 1", jPlus1)
+                print("index at j + 1", data.vocLemmaToIDX[jPlus1])
+                gold = np.zeros(voc_size)
+                gold[data.vocLemmaToIDX[jPlus1]] = 1.0
+                print("one hot for j + 1", gold)
+                print("one hot for j + 1 shape", gold.shape)
+                model.train_on_batch(x[j].reshape((1,1,w2v_dimension)), gold.reshape((1,voc_size)), accuracy=True)
             #at the end of the sequence reset the states
             model.reset_states()
             # model.layers[1].reset_states()        #this is safer if I'm sure which layer is the LSTM
