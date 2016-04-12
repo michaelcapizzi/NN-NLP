@@ -76,6 +76,8 @@ def padToConstant(sentence, w2vDim, maxLength):
     for i in range(maxLength-len(sentence)):
         sentence.append(np.zeros(w2vDim))
 
+    return sentence
+
 
 #get word vector
 def getVector(word, gensimModel, w2vDim):

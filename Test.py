@@ -140,19 +140,19 @@ for i in range(num_epochs):
                     allLemmaVectorsPadded.append(lemmaVectorPadded)
                     #loop through each word in the sequence, with an X of current word (j) and y of next word (j + 1)
                     for j in range(max_sentence_length-1):
-                        jPlus1 = w2v.most_similar(positive=lemmaVectorPadded[j+1], topn=1)[0][0]
+                        jPlus1 = w2v.most_similar(positive=[lemmaVectorPadded[j+1]], topn=1)[0][0]
                         #bail on sentence when the next word is np.zeros
                         #either because it's padding or not in the W2V vectors
                         if np.all(lemmaVectorPadded[j+1] != np.zeros(w2v_dimension)):
                             print("j", j)
-                            print("training item shape", str(lemmaVectorPadded[j].shape))
-                            print("vector at j + 1", lemmaVectorPadded[j+1])
+                            print("shape of vector at j", lemmaVectorPadded[j].shape)
+                            # print("vector at j + 1", lemmaVectorPadded[j+1])
                             print("shape of vector at j + 1", lemmaVectorPadded[j+1].shape)
                             print("word at j + 1", jPlus1)
                             print("index at j + 1", data.vocLemmaToIDX[jPlus1])
                             gold = np.zeros(voc_size)
                             gold[data.vocLemmaToIDX[jPlus1]] = 1.0
-                            print("one hot for j + 1", gold)
+                            # print("one hot for j + 1", gold)
                             print("one hot for j + 1 shape", gold.shape)
                             model.train_on_batch(lemmaVectorPadded[j].reshape((1,1,w2v_dimension)), gold.reshape((1,voc_size)), accuracy=True)
                         else:
