@@ -1,5 +1,6 @@
 from processors import *
 import numpy as np
+from keras import preprocessing
 
 """
 Currently not using preprocessing methods available in keras.  Using pyprocessors [https://github.com/myedibleenso/py-processors]
@@ -43,8 +44,7 @@ def sortBySeqLength(seqs):
     return dict
 
 
-#pad to longest sequence length
-def padToLongest(dictOfSeqs):
+def padToLongest(dictOfSeqs, w2vDim):
     #get lengths from dictionary
     keys = dictOfSeqs.keys()
     #get longest length
@@ -56,16 +56,18 @@ def padToLongest(dictOfSeqs):
             seqs = dictOfSeqs[k]
             padded_seqs = []
             for s in seqs:
-                #pad with 0s at the end til it's the same length as longest sequence
-                padded_s = np.pad(s, pad_width=(0,longest-k), mode="constant")
+                #pad with np.zeros(w2vDim) at the end til it's the same length as longest sequence
+                for i in range(longest-k):
+                    s.append(np.zeros(w2vDim))
                 #add to padded_seqs
-                padded_seqs.append(padded_s)
+                padded_seqs.append(s)
             #add to new dictionary
             new_dict[k] = padded_seqs
         else:
             new_dict[k] = dictOfSeqs[k]
 
     return new_dict
+
 
 
 #get word vector

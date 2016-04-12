@@ -5,28 +5,49 @@ import Utils.PreProcessing as pre
 from keras.models import *
 from keras.layers import *
 from random import shuffle
+from multiprocessing import Process
 
 #sys.argv[1] = file to process for data
 #sys.argv[2] = line separated?
 #sys.argv[3] = word2vec file
 
+
+# #for multiprocessing
+# def f1():
+#     global w2v
+#     w2v = g.Word2Vec.load_word2vec_format(sys.argv[3], binary=False)
+#
+# def f2():
+#     data.startServer()
+
 #get embeddings
 print("loading embeddings")
+# w2v = g.Word2Vec()
 w2v = g.Word2Vec.load_word2vec_format(sys.argv[3], binary=False)
-#get size of vectors
-w2vSize = len(w2v["the"])
 
 #process data
 if sys.argv[2] == "True" or sys.argv[2] == "T" or sys.argv[2] == "true" or sys.argv[2] == "t":
+    # global data
     data = d.Data(filepath=sys.argv[1], lineSeparated=True)
 else:
+    # global data
     data = d.Data(filepath=sys.argv[1])
+
+# #for multiprocessing
+# p1 = Process(target=f1)
+# p1.start()
+# p2 = Process(target=f2)
+# p2.start()
+# p1.join()
+# p2.join()
 
 data.startServer()
 print("annotating text")
 data.annotateText()
 data.getTokenized()
 
+#get size of vectors
+w2vSize = len(w2v["the"])
 
 #convert to vectors
 print("converting sentences to vectors")
@@ -41,13 +62,18 @@ wordVectorsBatched = pre.sortBySeqLength(wordVectors)
 lemmaVectorsBatched = pre.sortBySeqLength(lemmaVectors)
 #pad
 print("padding")
-wordVectorsBatched = pre.padToLongest(wordVectorsBatched)
+wordVectorsBatched = pre.padToLongest(wordVectorsBatched, w2vSize)
 #pad
-lemmaVectorsBatched = pre.padToLongest(lemmaVectorsBatched)
+lemmaVectorsBatched = pre.padToLongest(lemmaVectorsBatched, w2vSize)
 
+key = lemmaVectorsBatched.keys()[0]
+
+# print("lemma", len(lemmaVectorsBatched[key][0]))
+# print("word", len(wordVectorsBatched[key][0]))
+# print("lemma", lemmaVectorsBatched[key][0])
+# print("word", wordVectorsBatched[key][0])
 
 #build the LSTM with static (not updated during training) vectors
-print("building LSTM")
 model = Sequential()
 
 #hyperparameters
@@ -59,6 +85,8 @@ c_size = 100
 num_epochs = 2
 test_set = []
 
+
+print("building LSTM")
 #masking layer to handle variable lengths
     #all items are padded to max_sentence_length
     #batch_input_shape must be provided to first layer
@@ -85,7 +113,7 @@ for i in range(num_epochs):
     shuffle(lemmaVectorsBatched.keys())
     #iterate through batches
     for k in lemmaVectorsBatched.keys():
-        print("epoch", str(i+1), "sequence lengt ", str(k))
+        print("epoch", str(i+1), "sequence length", str(k))
         #get all training sentences from that sequence length
         samples = lemmaVectorsBatched[k]
         #add last example to testing set and train on all the rest
@@ -96,9 +124,12 @@ for i in range(num_epochs):
             for_training = lemmaVectorsBatched[k]
         #iterate through all training examples
         for x in for_training:
+            print("x", x)
             #loop through each word in the sequence, with an X of current word (j) and y of next word (j + 1)
             for j in range(max_sentence_length-1):
-                print("training item shape: ", x[j].shape(), "item: ", x[j])
+                print("j", j)
+                print("training item shape", str(x[j].shape))
+                print("item", str(x[j]))
                 model.train_on_batch(x[j], x[j+1], accuracy=True)
             #at the end of the sequence reset the states
             model.reset_states()
