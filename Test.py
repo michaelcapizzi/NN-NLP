@@ -144,6 +144,7 @@ for test_item in test_set:
         if np.all(test_item[m] != np.zeros(w2v_dimension)):
             #distribution predicted from softmax
             distribution = model.predict_on_batch(test_item[m].reshape(1,1,w2v_dimension))
+            print("softmax output", distribution)
             #get index of most likely
             idx = np.argmax(distribution)
             #get closest word
@@ -151,15 +152,16 @@ for test_item in test_set:
             #real next word
             real_word = w2v.most_similar(positive=[test_item[m+1]], topn=1)[0][0]
             sentence.append(closest_word)
-            print("given: ", sentence)
-            print("predicted: ", closest_word)
-            print("actual: ", real_word)
+            print("predicted sentence so far: ", sentence)
+            print("predicted next word: ", closest_word)
+            print("actual next word: ", real_word)
             if real_word == closest_word:
                 results.append(1)
             else:
                 results.append(0)
         else:
             break
+    model.reset_states()
     print("final sentence: ", sentence)
     print("accuracy: ", str(float(results.count(1)) / float(len(results))))
 
