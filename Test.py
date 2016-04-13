@@ -5,13 +5,18 @@ import Utils.PreProcessing as pre
 from keras.models import *
 from keras.layers import *
 from random import shuffle
+import pickle
 from collections import Counter
 from multiprocessing import Process
+
+#TODO look here! https://github.com/fchollet/keras/issues/395
 
 #sys.argv[1] = file to process for data
 #sys.argv[2] = line separated?
 #sys.argv[3] = word2vec file
 #sys.argv[4] = max length of sentence to consider (currently using 30)
+#sys.argv[5] = [optional] full path of pickled training vectors
+#sys.argv[6] = [optional] full path of pickled testing vectors
 
 
 #get embeddings
@@ -35,6 +40,8 @@ w2vSize = len(w2v["the"])
 
 #max length
 maxLength = int(sys.argv[4])
+
+
 
 #open file to estimate vocabulary size
 f = open(sys.argv[1], "rb")
@@ -65,7 +72,7 @@ max_sentence_length = maxLength
 # voc_size = len(data.vocIDXtoLemma.keys()) #since building as we go, can't know this yet
 voc_size = len(counter.items())         #over-estimation of vocabulary size; will this affect performance?
 c_size = 100
-num_epochs = 10
+num_epochs = 2
 test_set = []
 
 print("building LSTM")
@@ -116,7 +123,8 @@ for i in range(num_epochs):
                     #add to data.rawSents
                 data.annotateText(line)
                 #tokenize most recent sentence
-                data.getTokenized(data.rawSents[-1], cWord, lWord)
+                    #capture current idx for indexing
+                cWord, lWord = data.getTokenized(data.rawSents[-1], cWord, lWord)
 
                 print("current sentence in words", data.seqWords[-1])
                 print("current sentence in lemmas", data.seqLemmas[-1])
@@ -144,12 +152,13 @@ for i in range(num_epochs):
                         #bail on sentence when the next word is np.zeros
                         #either because it's padding or not in the W2V vectors
                         if np.all(lemmaVectorPadded[j+1] != np.zeros(w2v_dimension)):
-                            print("j", j)
+                            print("epoch", str(i+1))
+                            print("time step", j)
                             print("shape of vector at j", lemmaVectorPadded[j].shape)
                             # print("vector at j + 1", lemmaVectorPadded[j+1])
-                            print("shape of vector at j + 1", lemmaVectorPadded[j+1].shape)
                             print("word at j + 1", jPlus1)
                             print("index at j + 1", data.vocLemmaToIDX[jPlus1])
+                            # print("shape of vector at j + 1", lemmaVectorPadded[j+1].shape)
                             gold = np.zeros(voc_size)
                             gold[data.vocLemmaToIDX[jPlus1]] = 1.0
                             # print("one hot for j + 1", gold)
@@ -162,6 +171,15 @@ for i in range(num_epochs):
 
 #for all subsequent epochs, when data is already processed
     else:
+        #pickle training and testing data
+        if sys.argv[5]:
+            out = open(sys.argv[5], "wb")
+            pickle.dump(allLemmaVectorsPadded, out)
+            out.close()
+        if sys.argv[6]:
+            out2 = open(sys.argv[6], "wb")
+            pickle.dump(test_set, out2)
+            out2.close()
         #shuffle sentences at beginning of each epoch
         shuffle(allWordVectorsPadded)
         shuffle(allLemmaVectorsPadded)
@@ -175,15 +193,15 @@ for i in range(num_epochs):
                 #either because it's padding or not in the W2V vectors
                 if np.all(sent[j+1] != np.zeros(w2v_dimension)):
                     print("epoch", str(i+1))
-                    print("j", j)
-                    print("training item shape", str(sent[j].shape))
-                    print("vector at j + 1", sent[j+1])
-                    print("shape of vector at j + 1", sent[j+1].shape)
+                    print("time step", j)
+                    # print("training item shape", str(sent[j].shape))
+                    # print("vector at j + 1", sent[j+1])
+                    # print("shape of vector at j + 1", sent[j+1].shape)
                     print("word at j + 1", jPlus1)
                     print("index at j + 1", data.vocLemmaToIDX[jPlus1])
                     gold = np.zeros(voc_size)
                     gold[data.vocLemmaToIDX[jPlus1]] = 1.0
-                    print("one hot for j + 1", gold)
+                    # print("one hot for j + 1", gold)
                     print("one hot for j + 1 shape", gold.shape)
                     model.train_on_batch(sent[j].reshape((1,1,w2v_dimension)), gold.reshape((1,voc_size)), accuracy=True)
                 else:
@@ -232,7 +250,10 @@ for test_item in test_set:
     allResults.append(sentenceAccuracy)
 
 #final average accuracy
-averageAccuracy = sum(allResults) / float(len(allResults))
+if len(allResults) == 0.0:
+    averageAccuracy = 0
+else:
+    averageAccuracy = sum(allResults) / float(len(allResults))
 print("final accuracy", str(averageAccuracy))
 
 f.close()

@@ -185,4 +185,6 @@ class Data:
             self.seqWords = [list(itertools.ifilter(lambda x: not re.match(regex, x) and x != "'", self.seqWords[i])) for i in range(len(self.seqWords))]
             self.seqLemmas = [list(itertools.ifilter(lambda x: not re.match(regex, x) and x != "'", self.seqLemmas[i])) for i in range(len(self.seqLemmas))]
 
+        return last_cWord, last_cLemma
+
 
