@@ -11,6 +11,8 @@ from multiprocessing import Process
 
 #TODO look here! https://github.com/fchollet/keras/issues/395
 
+#TODO update -- compare to eosTest.py
+
 #sys.argv[1] = file to process for data
 #sys.argv[2] = line separated?
 #sys.argv[3] = word2vec file
@@ -90,7 +92,7 @@ model.add(Dense(output_dim=voc_size, activation="softmax"))
 
 # model.compile(loss="binary_crossentropy", optimizer="rmsprop")
 # model.compile(loss="mse", optimizer="rmsprop")
-model.compile(loss="categorical_crossentropy", optimizer="rmsprop")
+model.compile(loss="categorical_crossentropy", optimizer="rmsprop", metrics=["accuracy"])
 
 model.summary()
 
