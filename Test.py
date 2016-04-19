@@ -11,23 +11,23 @@ from multiprocessing import Process
 
 #TODO look here! https://github.com/fchollet/keras/issues/395
 
-#TODO update -- compare to eosTest.py
 
 #sys.argv[1] = file to process for data
-#sys.argv[2] = line separated?
-#sys.argv[3] = word2vec file
-#sys.argv[4] = max length of sentence to consider (currently using 30)
-#sys.argv[5] = [optional] full path of pickled training vectors
-#sys.argv[6] = [optional] full path of pickled testing vectors
+#sys.argv[2] = number of lines to take from file
+#sys.argv[3] = line separated?
+#sys.argv[4] = word2vec file
+#sys.argv[5] = max length of sentence to consider (currently using 30)
+#sys.argv[6] = [optional] full path of pickled training vectors
+#sys.argv[7] = [optional] full path of pickled testing vectors
 
 
 #get embeddings
 print("loading embeddings")
 # w2v = g.Word2Vec()
-w2v = g.Word2Vec.load_word2vec_format(sys.argv[3], binary=False)
+w2v = g.Word2Vec.load_word2vec_format(sys.argv[4], binary=False)
 
 #process data
-if sys.argv[2] == "True" or sys.argv[2] == "T" or sys.argv[2] == "true" or sys.argv[2] == "t":
+if sys.argv[3] == "True" or sys.argv[3] == "T" or sys.argv[3] == "true" or sys.argv[3] == "t":
     # global data
     data = d.Data(filepath=sys.argv[1], lineSeparated=True)
 else:
@@ -41,7 +41,8 @@ data.startServer()
 w2vSize = len(w2v["the"])
 
 #max length
-maxLength = int(sys.argv[4])
+maxLength = int(sys.argv[5])
+
 
 
 
@@ -52,12 +53,19 @@ print("estimating vocabulary size")
 #estimate vocabulary size
 counter = Counter()
 
+#max number of line to take from input file
+max = int(sys.argv[2])
+#counter to keep track of lines taken from file
+c = 0
 
+#build an estimation of the vocabulary size
 for line in f:
-    clean = line.rstrip()
-    tokens = clean.split(" ")
-    for t in tokens:
-        counter[t] += 1
+    c+=1
+    if c <= max:
+        clean = line.rstrip()
+        tokens = clean.split(" ")
+        for t in tokens:
+            counter[t] += 1
 
 #close file
 f.close()
@@ -108,6 +116,9 @@ allLemmaVectorsPadded = []
 for i in range(num_epochs):
     #for first iteration, must process text first
     if i == 0:
+        #counter to keep track of number of lines to process
+        c = 0
+
         print("epoch", str(i+1))
         #counter to keep track of items to remove for testing
         l = 0
@@ -118,68 +129,72 @@ for i in range(num_epochs):
             #because training file is too long to do all at once
         for line in f:
 
-            l += 1
-            #skip any line that is larger than max length as set in command line
-            if len(line.rstrip().split(" ")) < max_sentence_length:
-                #annotate line
-                    #add to data.rawSents
-                data.annotateText(line)
-                #tokenize most recent sentence
-                    #capture current idx for indexing
-                cWord, lWord = data.getTokenized(data.rawSents[-1], cWord, lWord)
+            c += 1
 
-                print("current sentence in words", data.seqWords[-1])
-                print("current sentence in lemmas", data.seqLemmas[-1])
+            if c <= max_sentence_length:
+                l += 1
+                #skip any line that is larger than max length as set in command line
+                if len(line.rstrip().split(" ")) < max_sentence_length:
+                    #annotate line
+                        #add to data.rawSents
+                    data.annotateText(line)
+                    #tokenize most recent sentence
+                        #capture current idx for indexing
+                    cWord, lWord = data.getTokenized(data.rawSents[-1], cWord, lWord)
 
-                #convert most recent sentence to vector
-                wordVector = pre.convertSentenceToVec(data.seqWords[-1], w2v, w2vSize)
-                lemmaVector = pre.convertSentenceToVec(data.seqLemmas[-1], w2v, w2vSize)
+                    print("current sentence in words", data.seqWords[-1])
+                    print("current sentence in lemmas", data.seqLemmas[-1])
 
-                #pad
-                print("padding")
-                wordVectorPadded = pre.padToConstant(wordVector, w2vSize, maxLength)
-                lemmaVectorPadded = pre.padToConstant(lemmaVector, w2vSize, maxLength)
+                    #convert most recent sentence to vector
+                    wordVector = pre.convertSentenceToVec(data.seqWords[-1], w2v, w2vSize)
+                    lemmaVector = pre.convertSentenceToVec(data.seqLemmas[-1], w2v, w2vSize)
 
-                #keep every 1000th line for testing
-                if l % 1000 == 0:
-                    test_set.append(lemmaVectorPadded)
-                #otherwise, run through LSTM as training example
-                else:
-                    #add to collection (for use in later epochs)
-                    allWordVectorsPadded.append(wordVectorPadded)
-                    allLemmaVectorsPadded.append(lemmaVectorPadded)
-                    #loop through each word in the sequence, with an X of current word (j) and y of next word (j + 1)
-                    for j in range(max_sentence_length-1):
-                        jPlus1 = w2v.most_similar(positive=[lemmaVectorPadded[j+1]], topn=1)[0][0]
-                        #bail on sentence when the next word is np.zeros
-                        #either because it's padding or not in the W2V vectors
-                        if np.all(lemmaVectorPadded[j+1] != np.zeros(w2v_dimension)):
-                            print("epoch", str(i+1))
-                            print("time step", j)
-                            print("shape of vector at j", lemmaVectorPadded[j].shape)
-                            # print("vector at j + 1", lemmaVectorPadded[j+1])
-                            print("word at j + 1", jPlus1)
-                            print("index at j + 1", data.vocLemmaToIDX[jPlus1])
-                            # print("shape of vector at j + 1", lemmaVectorPadded[j+1].shape)
-                            gold = np.zeros(voc_size)
-                            gold[data.vocLemmaToIDX[jPlus1]] = 1.0
-                            # print("one hot for j + 1", gold)
-                            print("one hot for j + 1 shape", gold.shape)
-                            model.train_on_batch(lemmaVectorPadded[j].reshape((1,1,w2v_dimension)), gold.reshape((1,voc_size)), accuracy=True)
-                        else:
-                            break
-                    #at the end of the sequence reset the states
-                    model.reset_states()
+                    #pad
+                    print("padding")
+                    wordVectorPadded = pre.padToConstant(wordVector, w2vSize, maxLength)
+                    lemmaVectorPadded = pre.padToConstant(lemmaVector, w2vSize, maxLength)
+
+                    #keep every 1000th line for testing
+                    if l % 1000 == 0:
+                        test_set.append(lemmaVectorPadded)
+                    #otherwise, run through LSTM as training example
+                    else:
+                        #add to collection (for use in later epochs)
+                        allWordVectorsPadded.append(wordVectorPadded)
+                        allLemmaVectorsPadded.append(lemmaVectorPadded)
+                        #loop through each word in the sequence, with an X of current word (j) and y of next word (j + 1)
+                        for j in range(max_sentence_length-1):
+                            jPlus1 = w2v.most_similar(positive=[lemmaVectorPadded[j+1]], topn=1)[0][0]
+                            #bail on sentence when the next word is np.zeros
+                            #either because it's padding or not in the W2V vectors
+                            if np.all(lemmaVectorPadded[j+1] != np.zeros(w2v_dimension)):
+                                print("epoch", str(i+1))
+                                print("time step", j)
+                                print("shape of vector at j", lemmaVectorPadded[j].shape)
+                                # print("vector at j + 1", lemmaVectorPadded[j+1])
+                                print("word at j + 1", jPlus1)
+                                print("index at j + 1", data.vocLemmaToIDX[jPlus1])
+                                # print("shape of vector at j + 1", lemmaVectorPadded[j+1].shape)
+                                gold = np.zeros(voc_size)
+                                gold[data.vocLemmaToIDX[jPlus1]] = 1.0
+                                # print("one hot for j + 1", gold)
+                                print("one hot for j + 1 shape", gold.shape)
+                                model.train_on_batch(lemmaVectorPadded[j].reshape((1,1,w2v_dimension)), gold.reshape((1,voc_size)), accuracy=True)
+                            else:
+                                break
+                        #at the end of the sequence reset the states
+                        model.reset_states()
+            else:
+                break
 
 #for all subsequent epochs, when data is already processed
     else:
         #pickle training and testing data
-        if sys.argv[5]:
-            out = open(sys.argv[5], "wb")
+        if len(sys.argv) == 8:
+            out = open(sys.argv[6], "wb")
             pickle.dump(allLemmaVectorsPadded, out)
             out.close()
-        if sys.argv[6]:
-            out2 = open(sys.argv[6], "wb")
+            out2 = open(sys.argv[7], "wb")
             pickle.dump(test_set, out2)
             out2.close()
         #shuffle sentences at beginning of each epoch

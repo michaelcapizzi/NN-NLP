@@ -209,7 +209,7 @@ for i in range(num_epochs):
                 else:
                     gold = np.array([0,1])
                 print("label", gold)
-                model.train_on_batch(lemmaVectorPadded[j].reshape(1,1,w2v_dimension), gold, accuracy=True)
+                model.train_on_batch(lemmaVectorPadded[j].reshape(1,1,w2v_dimension), gold.reshape(1,2), accuracy=True)
                 #at the end of the sequence reset the states
             model.reset_states()
 
