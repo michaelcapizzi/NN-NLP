@@ -159,8 +159,8 @@ for i in range(num_epochs):
                         # wordVectorPadded = pre.padToConstant(wordVector, w2vSize, maxLength)
                         lemmaVectorPadded = pre.padToConstant(lemmaVector, w2vSize, maxLength)
 
-                        #keep every 1000th line for testing
-                        if l % 1000 == 0:
+                        #keep a 10th of the examples testing
+                        if l % (max/10) == 0:
                             test_set.append(lemmaVectorPadded)
                         #otherwise, run through LSTM as training example
                         else:
