@@ -131,7 +131,7 @@ for i in range(num_epochs):
 
             c += 1
 
-            if c <= max_sentence_length:
+            if c <= max:
                 l += 1
                 #skip any line that is larger than max length as set in command line
                 if len(line.rstrip().split(" ")) < max_sentence_length:

@@ -107,7 +107,7 @@ for i in range(num_epochs):
 
                     c += 1
 
-                    if c <= max_sentence_length:
+                    if c <= max:
                         l += 1
 
                         #pad

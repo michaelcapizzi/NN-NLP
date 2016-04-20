@@ -45,6 +45,9 @@ data.startServer()
 #get size of vectors
 w2vSize = len(w2v["the"])
 
+#number of lines to take
+max = int(sys.argv[2])
+
 #max length
 maxLength = int(sys.argv[5])
 
@@ -157,7 +160,7 @@ for i in range(num_epochs):
 
                     c += 1
 
-                    if c <= max_sentence_length:
+                    if c <= max:
                         l += 1
 
                         #pad
