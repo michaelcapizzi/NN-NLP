@@ -269,6 +269,8 @@ for test_item in test_set:
 #final average accuracy
 if len(allResults) == 0.0:
     averageAccuracy = 0
+elif sum(allResults) == 0:
+    averageAccuracy = 0
 else:
     averageAccuracy = sum(allResults) / float(len(allResults))
 print("final accuracy", str(averageAccuracy))
