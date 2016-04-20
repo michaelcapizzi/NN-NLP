@@ -13,32 +13,12 @@ from multiprocessing import Process
 #TODO look here! https://github.com/fchollet/keras/issues/395
 #TODO look here! http://blog.thedigitalcatonline.com/blog/2013/03/26/python-generators-from-iterators-to-cooperative-multitasking-2/#.VxacbB8zrCI
 
-#sys.argv[1] = file to process for data
-#sys.argv[2] = number of lines to take from file
-#sys.argv[3] = line separated?
-#sys.argv[4] = word2vec file
-#sys.argv[5] = max length of sentence to consider (currently using 30); needed to handle fixed size of input matrix
-#sys.argv[6] = c_size
-#sys.argv[7] = # of epochs
-#sys.argv[8] = loss function
-
-
-
-
-
 #get embeddings
 print("loading embeddings")
 # w2v = g.Word2Vec()
-w2v = g.Word2Vec.load_word2vec_format(sys.argv[4], binary=False)
+w2v = g.Word2Vec.load_word2vec_format("w2v_Gigaword.txt.gz", binary=False)
 
-#process data
-if sys.argv[3] == "True" or sys.argv[3] == "T" or sys.argv[3] == "true" or sys.argv[3] == "t":
-    # global data
-    data = d.Data(filepath=sys.argv[1], lineSeparated=True)
-else:
-    # global data
-    data = d.Data(filepath=sys.argv[1])
-
+data = d.Data(filepath="cocaForLM.txt", lineSeparated=True)
 
 data.startServer()
 
@@ -46,41 +26,10 @@ data.startServer()
 w2vSize = len(w2v["the"])
 
 #max length
-maxLength = int(sys.argv[5])
+maxLength = 30
 
-#c_size
-c_size = int(sys.argv[6])
-
-## of epochs
-num_epochs = int(sys.argv[7])
-
-
-
-# #open file to estimate vocabulary size
-# f = open(sys.argv[1], "rb")
-#
-# print("estimating vocabulary size")
-# #estimate vocabulary size
-# counter = Counter()
-#
-# #max number of line to take from input file
-# max = int(sys.argv[2])
-# #counter to keep track of lines taken from file
-# c = 0
-#
-# #build an estimation of the vocabulary size
-# for line in f:
-#     c+=1
-#     if c <= max:
-#         clean = line.rstrip()
-#         tokens = clean.split(" ")
-#         for t in tokens:
-#             counter[t] += 1
-#
-#
-# #close file
-# f.close()
-
+#max number of line to take from input file
+max = 10
 
 #build the LSTM
 
@@ -90,6 +39,8 @@ model = Sequential()
 #hyperparameters
 w2v_dimension = w2vSize
 max_sentence_length = maxLength
+c_size = 100
+num_epochs = 2
 test_set = []
 
 print("building LSTM")
@@ -113,12 +64,11 @@ model.compile(loss="categorical_crossentropy", optimizer="rmsprop")
 model.summary()
 
 #open file to handle line at a time
-f = open(sys.argv[1], "rb")
+f = open("cocaForLM.txt", "rb")
 
 #training
 print("training")
 
-# allWordVectorsPadded = []
 allLemmaVectorsPadded = []
 
 for i in range(num_epochs):
@@ -212,74 +162,73 @@ for i in range(num_epochs):
                 #at the end of the sequence reset the states
             model.reset_states()
 
-
 #testing
 print("testing")
 #iterate through testing samples
 allResults = []
-for test_item in test_set:
-    #list to keep accumulated sentence
-    sentence = []
-    #list to keep sentence results
-    results = []
-    #iterate through each word predicting the next word
-    for m in range(max_sentence_length-1):
-        # distribution = model.predict_on_batch(test_item[m].reshape(1,1,w2v_dimension))
-        #get softmax of labels
-        distribution = model.predict_on_batch(test_item[m].reshape((1,1,w2v_dimension)))
-        #get argmax of softmax
-        label = np.argmax(distribution)
-        #get actual
-        if m == max_sentence_length - 1 or np.all(test_item[m+1] == np.zeros(w2v_dimension)):
-            actual = np.argmax(np.array([1,0]))
-        else:
-            actual = np.argmax(np.array([0,1]))
-        #get the word associated with the vector
-        word = w2v.most_similar(positive=[test_item[m]], topn=1)[0][0]
-        #add to sentence
-        sentence.append(word)
-        print("current sentence", sentence)
-        print("predicted", label)
-        print("actual", actual)
-        #record results
-        if actual == 1 and label == 1:
-            results.append("tp")
-            print("end of sentence")
-            break
-        elif actual == 1 and label == 0:
-            results.append("fn")
-            print("end of sentence")
-            break
-        elif actual == 0 and label == 1:
-            results.append("fp")
-        else:
-            results.append("tn")
-    #reset state of net
-    model.reset_states()
-    #count true / false negative/positives
-    tp = results.count("tp")
-    tn = results.count("tn")
-    fp = results.count("fp")
-    fn = results.count("fn")
-    precision = e.precision(tp, fp)
-    recall = e.recall(tp, fn)
-    f1 = e.f1(precision, recall)
-    print("sentence precision", precision)
-    print("sentence recall", recall)
-    print("sentence f1", f1)
-    #add all results to final results
-    for r in results:
-        allResults.append(r)
-
-#final results
-finalTP = allResults.count("tp")
-finalTN = allResults.count("tn")
-finalFP = allResults.count("fp")
-finalFN = allResults.count("fn")
-finalPrecision = e.precision(finalTP, finalFP)
-finalRecall = e.recall(finalTP, finalFN)
-finalF1 = e.f1(finalPrecision, finalRecall)
-print("final precision", finalPrecision)
-print("final recall", finalRecall)
-print("final f1", finalF1)
-
+# for test_item in test_set:
+#     #list to keep accumulated sentence
+#     sentence = []
+#     #list to keep sentence results
+#     results = []
+#     #iterate through each word predicting the next word
+#     for m in range(max_sentence_length-1):
+#         # distribution = model.predict_on_batch(test_item[m].reshape(1,1,w2v_dimension))
+#         #get softmax of labels
+#         distribution = model.predict_on_batch(test_item[m].reshape((1,1,w2v_dimension)))
+#         #get argmax of softmax
+#         label = np.argmax(distribution)
+#         #get actual
+#         if m == max_sentence_length - 1 or np.all(test_item[m+1] == np.zeros(w2v_dimension)):
+#             actual = 1
+#         else:
+#             actual = 0
+#         #get the word associated with the vector
+#         word = w2v.most_similar(positive=[test_item[m]], topn=1)[0][0]
+#         #add to sentence
+#         sentence.append(word)
+#         print("current sentence", sentence)
+#         print("predicted", label)
+#         print("actual", actual)
+#         #record results
+#         if actual == 1 and label == 1:
+#             results.append("tp")
+#             print("end of sentence")
+#             break
+#         elif actual == 1 and label == 0:
+#             results.append("fn")
+#             print("end of sentence")
+#             break
+#         elif actual == 0 and label == 1:
+#             results.append("fp")
+#         else:
+#             results.append("tn")
+#     #reset state of net
+#     model.reset_states()
+#     #count true / false negative/positives
+#     tp = results.count("tp")
+#     tn = results.count("tn")
+#     fp = results.count("fp")
+#     fn = results.count("fn")
+#     precision = e.precision(tp, fp)
+#     recall = e.recall(tp, fn)
+#     f1 = e.f1(precision, recall)
+#     print("sentence precision", precision)
+#     print("sentence recall", recall)
+#     print("sentence f1", f1)
+#     #add all results to final results
+#     for r in results:
+#         allResults.append(r)
+#
+# #final results
+# finalTP = allResults.count("tp")
+# finalTN = allResults.count("tn")
+# finalFP = allResults.count("fp")
+# finalFN = allResults.count("fn")
+# finalPrecision = e.precision(finalTP, finalFP)
+# finalRecall = e.recall(finalTP, finalFN)
+# finalF1 = e.f1(finalPrecision, finalRecall)
+# print("final precision", finalPrecision)
+# print("final recall", finalRecall)
+# print("final f1", finalF1)
+#
