@@ -22,7 +22,7 @@ from multiprocessing import Process
 #sys.argv[7] = # of epochs
 #sys.argv[8] = loss function
 
-
+#python eosTest.py cocaForLM.txt 5000 t w2v_Gigaword.txt.gz 30 100 5 "mean_squared_error"
 
 
 
@@ -108,7 +108,7 @@ model.add(Dense(output_dim=2, activation="softmax"))            #labels: EOS or 
 
 # model.compile(loss="binary_crossentropy", optimizer="rmsprop")
 # model.compile(loss="mse", optimizer="rmsprop")
-model.compile(loss="categorical_crossentropy", optimizer="rmsprop")
+model.compile(loss=sys.argv[8], optimizer="rmsprop")
 
 model.summary()
 
