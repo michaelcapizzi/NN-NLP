@@ -47,6 +47,7 @@ w2vSize = len(w2v["the"])
 
 #number of lines to take
 max = int(sys.argv[2])
+print(max)
 
 #max length
 maxLength = int(sys.argv[5])
@@ -168,7 +169,7 @@ for i in range(num_epochs):
                         # wordVectorPadded = pre.padToConstant(wordVector, w2vSize, maxLength)
                         lemmaVectorPadded = pre.padToConstant(lemmaVector, w2vSize, maxLength)
 
-                        #keep a 10th of the examples testing
+                        #keep a 10th of the examples for testing
                         if l % (max/10) == 0:
                             test_set.append(lemmaVectorPadded)
                         #otherwise, run through LSTM as training example
@@ -245,15 +246,15 @@ for test_item in test_set:
         print("predicted", label)
         print("actual", actual)
         #record results
-        if actual == 1 and label == 1:
+        if actual == 0 and label == 0:
             results.append("tp")
             print("end of sentence")
             break
-        elif actual == 1 and label == 0:
+        elif actual == 0 and label == 1:
             results.append("fn")
             print("end of sentence")
             break
-        elif actual == 0 and label == 1:
+        elif actual == 1 and label == 0:
             results.append("fp")
         else:
             results.append("tn")
