@@ -1,17 +1,59 @@
 from keras.models import *
 from keras.layers import *
 import numpy as np
+from random import shuffle
+from collections import Counter
+import Utils.PreProcessing as pre
+import Data as d
 
-class LSTM_keras:
+class LSTM_keras_LM:
     """
-    builds an LSTM using keras front end: http://keras.io/examples/#sequence-classification-with-lstm
-    :param embeddingLayer: Embedding_keras class (see Embedding) if vectors are to be learned
+    builds an LSTM for language modeling using keras front end: http://keras.io/examples/#sequence-classification-with-lstm
+    :param embeddingLayer Embedding_keras class (see Embedding) if vectors are to be learned
+    :param embeddingClass `gensim` class of `word2vec`
+    :param vocSize Size of vocabulary, will be dimensions of output
+    :param w2vDimension Dimension of word embeddings
+    :param cSize Size of cell state
+    :param max_seq_length Largest sequence that will be handled; any sequences larger than this will be ignored
+    :param W_regularizer ???
+    :param U_regularizer ???
+    :param b_regularizer ???
+    :param dropout_W Percentage of nodes in W matrix to be dropped out
+    :param dropout_U Percentage of nodes in U matrix (recurrent) to be dropped out
+    :param loss_function Loss function to be used
+    :param optimizer Optimizer to be used
+    :param num_epochs Number of epochs
     """
 
     # Input shape
     #3D tensor with shape `(nb_samples, timesteps, input_dim)`.
 
-    def __init__(self, embeddingLayer=None, vocSize=None, w2vDimension=None, cSize=300, max_seq_length=30, activation="tanh", inner_activation="hard_sigmoid", W_regularizer=None, U_regularizer=None, b_regularizer=None, dropout_W=0, dropout_U=0):
+    def __init__(self,
+                 embeddingLayer=None,
+                 embeddingClass=None,
+                 vocSize=None,
+                 w2vDimension=None,
+                 cSize=300,
+                 max_seq_length=30,
+                 W_regularizer=None,
+                 U_regularizer=None,
+                 b_regularizer=None,
+                 dropout_W=0,
+                 dropout_U=0,
+                 loss_function="categorical_crossentropy",
+                 optimizer="rmsprop",
+                 num_epochs=5,
+                 training_vector=None,
+                 testing_vector=None
+                 ):
+        self.embeddingLayer = embeddingLayer
+        self.embeddingClass = embeddingClass
+        self.num_epochs = num_epochs
+        self.max_seq_length = max_seq_length
+        self.training_vectors = training_vector
+        self.testing_vectors = testing_vector
+        self.data = None
+        self.vocSize = vocSize
         self.model = Sequential()
         if embeddingLayer:
             #get the dimensions from the embedding layer
@@ -25,27 +67,138 @@ class LSTM_keras:
             self.w2vDimension = w2vDimension
             #manually add a masking layer (to handle variable length of sequences)
                 #http://keras.io/layers/core/#masking
-            self.model.add(Masking(mask_value=0.0))
+            self.model.add(Masking(mask_value=np.zeros(self.w2vDimension), batch_input_shape=(1,1,self.w2vDimension)))
         #add the LSTM layer
         self.model.add(LSTM(
-                            # input_shape=(None,w2vDimension),              #can this be None?
-                            input_shape=(max_seq_length, w2vDimension),     #should allow for different batch sizes and required when the first layer of an architecture
-                            output_dim=vocSize,
-                            activation=activation,
-                            inner_activation=inner_activation,
+                            output_dim=cSize,
+                            activation="tanh",
+                            inner_activation="hard_sigmoid",
                             W_regularizer=W_regularizer,
                             U_regularizer=U_regularizer,
                             b_regularizer=b_regularizer,
                             dropout_W=dropout_W,
                             dropout_U=dropout_U,
-                            return_sequences=False           #True when using more than one layer
+                            return_sequences=False,           #True when using more than one layer
+                            stateful=True,
+                            batch_input_shape=(1,1,self.w2vDimension)
                             ))
         # self.model.add(Dropout)
-        self.model.add(Dense(vocSize))
-        self.model.add(Activation("softmax"))
+        self.model.add(Dense(
+                                output_dim=vocSize,
+                                activation="softmax"
+                            ))
+        self.model.compile(loss=loss_function, optimizer=optimizer, metrics=["accuracy"])
+        self.model.summary()
 
-    # def train
 
+    #file = file to use for training
+    #num_lines = number of lines to use from training file
+        #0 = all
+    #training_vector = vector of training instances
+    def train(self, fPath, num_lines):
+        if not self.embeddingLayer:
+            if fPath:
+                #make Data class
+                self.data = d.Data(filepath=fPath, lineSeparated=True)
+                #open file
+                f = open(fPath, "rb")
+                #make counter to estimate voc size
+                vocCounter = Counter()
+                #make counter to keep track of number of lines to process
+                line_counter = 0
+                #estimate vocabulary size
+                for line in f:
+                    line_counter += 1
+                    if line_counter <= num_lines:
+                        clean = line.rstrip()
+                        tokens = clean.split(" ")
+                        for t in tokens:
+                            vocCounter[t] += 1
+                f.close()
+                for i in range(self.num_epochs):
+                        #if file text must be processed
+                            #only relevant for first epoch
+                        if not self.training_vectors and i == 0:
+                            #counter to keep track of the number of lines to process
+                            c = 0
+                            #counter to keep track of lines to remove for testing
+                            l = 0
+
+                            #counter of words added to indices
+                            cWord = 0
+                            lWord = 0
+                            #iterate through each line
+                            for line in f:
+                                c+=1
+                                if c <= num_lines:
+                                    #skip any line that is larger than max length
+                                    if len(line.rstrip().split(" ")) < self.max_seq_length:
+                                        #set counter for test items
+                                        l+=1
+                                        #annotate line
+                                        self.data.annotateText(line)
+                                        #tokenize most recent sentence
+                                        cWord, lWord = self.data.getTokenized(self.data.rawSents[-1], cWord, lWord)
+                                        print("current sentence in words", self.data.seqWords[-1])
+                                        print("current sentence in lemmas", self.data.seqLemmas[-1])
+                                        #convert most recent sentence to vector
+                                        lemmaVector = pre.convertSentenceToVec(self.data.seqLemmas[-1], self.embeddingClass, self.w2vDimension)
+                                        #pad
+                                        lemmaVectorPadded = pre.padToConstant(lemmaVector, self.embeddingClass, self.max_seq_length)
+                                        #keep every 10th example for testing
+                                        if l % (num_lines/10) == 0:
+                                            self.testing_vectors.append(lemmaVectorPadded)
+                                        #otherwise run through LSTM as a training example
+                                        else:
+                                            #add to training collection
+                                            self.training_vectors.append(lemmaVectorPadded)
+                                            #loop through each word in sequence
+                                                #train = current word (j)
+                                                #label = next word (j + 1)
+                                            self._training_step(lemmaVectorPadded)
+                                            self.model.reset_states()
+                                else:
+                                    break
+
+                        #if not processing text or not first epoch
+                        else:
+                            #shuffle
+                            shuffle(self.training_vectors)
+
+                            #iterate through all training instances
+                            for sent in self.training_vectors:
+                                #loop through each word in sequence
+                                self._training_step(sent)
+                                self.model.reset_states()
+        #if learning embeddings
+        else:
+            print("not yet implemented")
+
+
+    def _training_step(self, item):
+        for j in range(self.max_seq_length-1):
+            jPlus1 = self.embeddingClass.most_similar(positive=[item[j+1]], topn=1)[0][0]
+            #bail on sentence when the next word is np.zeros
+                #either because it's padding or it's not in the word2vec vocabulary
+            if np.all(item[j+1] != np.zeros(self.w2vDimension)):
+                print("time step", j)
+                print("next word", jPlus1)
+                #set gold label
+                gold = np.zeros(self.vocSize)
+                gold[self.data.vocLemmaToIDX[jPlus1]] = 1.0
+                #take one training step
+                self.model.train_on_batch(item[j].reshape((1,1,self.w2vDimension)), gold.reshape((1,self.vocSize)))
+            else:
+                break
+
+    def _testing_step(self, item):
+        print("to be implemented")
+
+    def pickleData(self, vector):
+        print("to be implemented")
+
+    def unpickleData(self, vector):
+        print("to be implemented")
 """
 #only generates cost at end of sequence
 #can only generate a prediction for word at N + 1 (where N is length of sentence)
