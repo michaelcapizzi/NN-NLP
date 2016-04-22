@@ -95,6 +95,7 @@ class LSTM_keras_LM:
                 batch_input_shape=(1,1,self.w2vDimension)
         ))
 
+#################################################
 
     #must be done first!
         #num_lines = number of lines to process in file
@@ -162,6 +163,9 @@ class LSTM_keras_LM:
             self.vocSize = len(vocCounter.items())
 
 
+#################################################
+
+
     #builds LSTM model
     #must be done **after** prepareData()
     def buildModel(self):
@@ -186,6 +190,9 @@ class LSTM_keras_LM:
 
         #print model summary
         self.model.summary()
+
+
+#################################################
 
 
         #file = file to use for training
@@ -265,6 +272,9 @@ class LSTM_keras_LM:
             print("not yet implemented")
 
 
+#################################################
+
+
     #tests the model for language modeling on all sentences reserved for testing
     def test_lm(self):
         if self.purpose == "EOS":
@@ -280,6 +290,9 @@ class LSTM_keras_LM:
             else:
                 averageAccuracy = e.accuracy(sum(allResults), len(allResults))
             print("final accuracy", str(averageAccuracy))
+
+
+#################################################
 
 
     #tests the model for EOS detection on all sentences reserved for testing
@@ -305,6 +318,9 @@ class LSTM_keras_LM:
                 print("final f1", finalF1)
 
 
+#################################################
+
+
     #trains the model on one training sentence
     def _training_step_lm(self, item):
         for j in range(self.max_seq_length-1):
@@ -324,6 +340,8 @@ class LSTM_keras_LM:
         #reset model cell state
         self.model.reset_states()
 
+
+#################################################
 
 
 #tests the model on one testing sentence
@@ -358,6 +376,9 @@ class LSTM_keras_LM:
         return sentenceAccuracy
 
 
+#################################################
+
+
     def _training_step_eos(self, item):
         for j in range(self.max_seq_length-1):
             if j == self.max_seq_length - 1 or np.all(item[j+1] == np.zeros(self.w2vDimension)):
@@ -370,6 +391,9 @@ class LSTM_keras_LM:
                 gold = np.array([0,1])
                 print("label", gold)
                 self.model.train_on_batch(item[j].reshape(1,1,self.w2vDimension), gold.reshape(1,2))
+
+
+#################################################
 
 
     def _testing_step_eos(self, item):
@@ -420,25 +444,39 @@ class LSTM_keras_LM:
         print("sentence f1", f1)
         return results
 
+
+#################################################
+
+
     def pickleData(self, vector):
         print("to be implemented")
+
+#################################################
 
 
     def unpickleData(self, vector):
         print("to be implemented")
 
 
+#################################################
+
+
     def saveModel(self):
         print("to be implemented")
 
+
+#################################################
 
     def saveWeights(self):
         print("to be implementd")
 
 
+#################################################
+
     def loadModel(self):
         print("to be implemented")
 
+#################################################
 
     def loadWeights(self):
         print("to be implemented")
