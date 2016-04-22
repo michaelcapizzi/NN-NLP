@@ -4,6 +4,7 @@ import numpy as np
 from random import shuffle
 from collections import Counter
 import Utils.PreProcessing as pre
+import Utils.Evaluation as e
 import Data as d
 
 class LSTM_keras_LM:
@@ -175,6 +176,21 @@ class LSTM_keras_LM:
             print("not yet implemented")
 
 
+    #tests the model on all sentences reserved for testing
+    def test(self):
+        allResults = []
+        for test_item in self.testing_vectors:
+            sentenceAccuracy = self._testing_step(test_item)
+            allResults.append(sentenceAccuracy)
+            self.model.reset_states()
+        if len(allResults) == 0.0 or sum(allResults) == 0.0:
+            averageAccuracy = 0
+        else:
+            averageAccuracy = e.accuracy(sum(allResults), len(allResults))
+        print("final accuracy", str(averageAccuracy))
+
+
+    #trains the model on one training sentence
     def _training_step(self, item):
         for j in range(self.max_seq_length-1):
             jPlus1 = self.embeddingClass.most_similar(positive=[item[j+1]], topn=1)[0][0]
@@ -191,14 +207,55 @@ class LSTM_keras_LM:
             else:
                 break
 
+
+    #tests the model on one testing sentence
     def _testing_step(self, item):
-        print("to be implemented")
+        sentence = []
+        results = []
+        for m in range(self.max_seq_length-1):
+            #if current word is not padding
+            if np.all(item[m] != np.zeros(self.w2vDimension)):
+                #get distribution over vocabulary as predicted by model
+                distribution = self.model.predict_on_batch(item[m].reshape(1,1,self.w2vDimension))
+                #index of most likely word
+                idx = np.argmax(distribution)
+                #get predicted word
+                closest_word = self.data.vocIDXtoLemma[idx]
+                #actual word
+                real_word = self.embeddingClass.most_similar(positive=[item[m+1]], topn=1)[0][0]
+                #add predicted word to sentence accumulation list
+                sentence.append(closest_word)
+                print("predicted sentence so far", sentence)
+                print("predicted next word", closest_word)
+                print("actual next word", real_word)
+                if real_word == closest_word:
+                    results.append(1)
+                else:
+                    results.append(0)
+            else:
+                break
+        sentenceAccuracy = e.accuracy(results.count(1), len(results))
+        print("final sentence", sentence)
+        print("sentence accuracy", str(sentenceAccuracy))
+        return sentenceAccuracy
+
 
     def pickleData(self, vector):
         print("to be implemented")
 
+
     def unpickleData(self, vector):
         print("to be implemented")
+
+
+    def saveModel(self):
+        print("to be implemented")
+
+    def loadModel(self):
+        print("to be implemented")
+
+
+####################################################################################
 """
 #only generates cost at end of sequence
 #can only generate a prediction for word at N + 1 (where N is length of sentence)

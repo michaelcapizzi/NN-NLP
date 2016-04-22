@@ -186,12 +186,16 @@ for i in range(num_epochs):
                                 #if the current word is the last in the sentence or the next word is padding or the end of the sequence, gold is EOS
                                 if j == max_sentence_length - 1 or np.all(lemmaVectorPadded[j+1] == np.zeros(w2v_dimension)):
                                     gold = np.array([1,0])
+                                    print("label", gold)
+                                    model.train_on_batch(lemmaVectorPadded[j].reshape(1,1,w2v_dimension), gold.reshape(1,2), accuracy=True)
+                                    #reset the states
+                                    model.reset_states()
+                                    break
                                 else:
                                     gold = np.array([0,1])
-                                print("label", gold)
-                                model.train_on_batch(lemmaVectorPadded[j].reshape(1,1,w2v_dimension), gold.reshape(1,2), accuracy=True)
-                            #at the end of the sequence reset the states
-                            model.reset_states()
+                                    print("label", gold)
+                                    model.train_on_batch(lemmaVectorPadded[j].reshape(1,1,w2v_dimension), gold.reshape(1,2), accuracy=True)
+
                     else:
                         break
         f.close()
@@ -210,12 +214,16 @@ for i in range(num_epochs):
                 #if the current word is the last in the sentence or the next word is padding or the end of the sequence, gold is EOS
                 if j == max_sentence_length - 1 or np.all(lemmaVectorPadded[j+1] == np.zeros(w2v_dimension)):
                     gold = np.array([1,0])
+                    print("label", gold)
+                    model.train_on_batch(lemmaVectorPadded[j].reshape(1,1,w2v_dimension), gold.reshape(1,2), accuracy=True)
+                    #reset the states
+                    model.reset_states()
                 else:
                     gold = np.array([0,1])
-                print("label", gold)
-                model.train_on_batch(lemmaVectorPadded[j].reshape(1,1,w2v_dimension), gold.reshape(1,2), accuracy=True)
-                #at the end of the sequence reset the states
-            model.reset_states()
+                    print("label", gold)
+                    model.train_on_batch(lemmaVectorPadded[j].reshape(1,1,w2v_dimension), gold.reshape(1,2), accuracy=True)
+
+
 
 
 #testing
