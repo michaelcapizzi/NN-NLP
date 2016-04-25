@@ -8,6 +8,8 @@ import Utils.PreProcessing as pre
 import Utils.Evaluation as e
 import Data as d
 
+#TODO test `lm` usage
+
 class LSTM_keras:
     """
     builds an LSTM using keras front end that can be used for language modeling or sentence segmentation.  See example: http://keras.io/examples/#sequence-classification-with-lstm
