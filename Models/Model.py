@@ -3,17 +3,17 @@ from keras.layers import *
 import numpy as np
 from random import shuffle
 from collections import Counter
+import pickle
 import Utils.PreProcessing as pre
 import Utils.Evaluation as e
 import Data as d
 
-class LSTM_keras_LM:
+class LSTM_keras:
     """
-    builds an LSTM for language modeling using keras front end: http://keras.io/examples/#sequence-classification-with-lstm
+    builds an LSTM using keras front end that can be used for language modeling or sentence segmentation.  See example: http://keras.io/examples/#sequence-classification-with-lstm
     :param purpose If `EOS`, used for determining end-of-sentence, if `LM` used for language modeling
     :param embeddingLayer Embedding_keras class (see Embedding) if vectors are to be learned
     :param embeddingClass `gensim` class of `word2vec`
-    :param vocSize Size of vocabulary, will be dimensions of output
     :param w2vDimension Dimension of word embeddings
     :param cSize Size of cell state
     :param max_seq_length Largest sequence that will be handled; any sequences larger than this will be ignored
@@ -35,7 +35,7 @@ class LSTM_keras_LM:
                  embeddingLayer=None,
                  embeddingClass=None,
                  w2vDimension=None,
-                 cSize=300,
+                 cSize=100,
                  max_seq_length=30,
                  W_regularizer=None,
                  U_regularizer=None,
@@ -66,6 +66,7 @@ class LSTM_keras_LM:
         self.dropout_U = dropout_U
         self.loss_function = loss_function
         self.optimizer = optimizer
+        self.model_json = None
         self.model = Sequential()
         if embeddingLayer:
             #get the dimensions from the embedding layer
@@ -202,11 +203,18 @@ class LSTM_keras_LM:
     def train(self, fPath):
         if not self.embeddingLayer:
             if fPath:
+                #open file
                 f = open(fPath, "rb")
+                #start the server
+                print("starting processors server")
+                self.data.startServer()
                 for i in range(self.num_epochs):
                     #if file text must be processed
                         #only relevant for first epoch
                     if not self.training_vectors and i == 0:
+                        #initialize vectors to house training and testing instances
+                        self.training_vectors = []
+                        self.testing_vectors = []
                         #counter to keep track of the number of lines to process
                         c = 0
                         #counter to keep track of lines to remove for testing
@@ -218,11 +226,14 @@ class LSTM_keras_LM:
                         #iterate through each line
                         for line in f:
                             c+=1
+                            print("c", c)
                             if c <= self.num_lines:
                                 #skip any line that is larger than max length
                                 if len(line.rstrip().split(" ")) < self.max_seq_length:
                                     #set counter for test items
                                     l+=1
+                                    print("l", l)
+
                                     #annotate line
                                     self.data.annotateText(line)
                                     #tokenize most recent sentence
@@ -232,12 +243,16 @@ class LSTM_keras_LM:
                                     #convert most recent sentence to vector
                                     lemmaVector = pre.convertSentenceToVec(self.data.seqLemmas[-1], self.embeddingClass, self.w2vDimension)
                                     #pad
-                                    lemmaVectorPadded = pre.padToConstant(lemmaVector, self.embeddingClass, self.max_seq_length)
+                                    lemmaVectorPadded = pre.padToConstant(lemmaVector, self.w2vDimension, self.max_seq_length)
                                     #keep every 10th example for testing
                                     if l % (self.num_lines/10) == 0:
+                                        print("adding to testing")
+                                        print("size of testing", len(self.testing_vectors))
                                         self.testing_vectors.append(lemmaVectorPadded)
                                     #otherwise run through LSTM as a training example
                                     else:
+                                        print("adding to training")
+                                        print("size of training", len(self.training_vectors))
                                         #add to training collection
                                         self.training_vectors.append(lemmaVectorPadded)
                                         #loop through each word in sequence
@@ -251,22 +266,24 @@ class LSTM_keras_LM:
                                             self._training_step_lm(lemmaVectorPadded)
                             else:
                                 break
-                            f.close()
+                        f.close()
+                        print("stopping server")
+                        self.data.stopServer()
 
-                        #if not processing text or not first epoch
-                        else:
-                            #shuffle
-                            shuffle(self.training_vectors)
+                    #if not processing text or not first epoch
+                    else:
+                        #shuffle
+                        shuffle(self.training_vectors)
 
-                            #iterate through all training instances
-                            for sent in self.training_vectors:
-                                #loop through each word in sequence
-                                if self.purpose == "LM":
-                                    self._training_step_lm(sent)
-                                elif self.purpose == "EOS":
-                                    self._training_step_eos(sent)
-                                else:
-                                    self._training_step_lm(sent)
+                        #iterate through all training instances
+                        for sent in self.training_vectors:
+                            #loop through each word in sequence
+                            if self.purpose == "LM":
+                                self._training_step_lm(sent)
+                            elif self.purpose == "EOS":
+                                self._training_step_eos(sent)
+                            else:
+                                self._training_step_lm(sent)
         #if learning embeddings
         else:
             print("not yet implemented")
@@ -447,39 +464,54 @@ class LSTM_keras_LM:
 
 #################################################
 
-
-    def pickleData(self, vector):
-        print("to be implemented")
-
-#################################################
-
-
-    def unpickleData(self, vector):
-        print("to be implemented")
-
+    #pickles a given vector to a given location
+    def pickleData(self, vector, location):
+        pickle.dump(vector, location)
 
 #################################################
 
-
-    def saveModel(self):
-        print("to be implemented")
+    #unpickles from a location
+        #vector = unpickleData(location)
+    def unpickleData(self, location):
+        return pickle.load(location)
 
 
 #################################################
 
-    def saveWeights(self):
-        print("to be implementd")
+    #save model to .json
+    def saveModel(self, location):
+        self.model_json = self.model.to_json()
+        open(location, "w").write(self.model_json)
 
 
 #################################################
 
-    def loadModel(self):
-        print("to be implemented")
+    #save weightse to .h5
+    def saveWeights(self, location):
+        self.model.save_weights(location)
+
 
 #################################################
 
-    def loadWeights(self):
-        print("to be implemented")
+    #load model from .json
+    def loadModel(self, location):
+        self.model = model_from_json(location)
+
+#################################################
+
+    #load weights from .h5
+    def loadWeights(self, location):
+        self.model.load_weights(location)
+
+
+
+
+
+
+
+
+
+
 
 ####################################################################################
 
