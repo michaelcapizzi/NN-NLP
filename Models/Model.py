@@ -225,14 +225,9 @@ class LSTM_keras:
                         lWord = 0
                         #iterate through each line
                         for line in f:
-                            c+=1
-                            print("c", c)
                             if c <= self.num_lines:
                                 #skip any line that is larger than max length
                                 if len(line.rstrip().split(" ")) < self.max_seq_length:
-                                    #set counter for test items
-                                    l+=1
-                                    print("l", l)
 
                                     #annotate line
                                     self.data.annotateText(line)
@@ -242,28 +237,31 @@ class LSTM_keras:
                                     print("current sentence in lemmas", self.data.seqLemmas[-1])
                                     #convert most recent sentence to vector
                                     lemmaVector = pre.convertSentenceToVec(self.data.seqLemmas[-1], self.embeddingClass, self.w2vDimension)
-                                    #pad
-                                    lemmaVectorPadded = pre.padToConstant(lemmaVector, self.w2vDimension, self.max_seq_length)
-                                    #keep every 10th example for testing
-                                    if l % (self.num_lines/10) == 0:
-                                        print("adding to testing")
-                                        print("size of testing", len(self.testing_vectors))
-                                        self.testing_vectors.append(lemmaVectorPadded)
-                                    #otherwise run through LSTM as a training example
-                                    else:
-                                        print("adding to training")
-                                        print("size of training", len(self.training_vectors))
-                                        #add to training collection
-                                        self.training_vectors.append(lemmaVectorPadded)
-                                        #loop through each word in sequence
-                                            #train = current word (j)
-                                            #label = next word (j + 1)
-                                        if self.purpose == "LM":
-                                            self._training_step_lm(lemmaVectorPadded)
-                                        elif self.purpose == "EOS":
-                                            self._training_step_eos(lemmaVectorPadded)
+                                    #only keep sentences for training and testing instances that have all words in word2vec list
+                                    if np.all(lemmaVector != np.zeros(self.w2vDimension)):
+                                        #set counter for total number of lines
+                                        c+=1
+                                        #set counter for test items
+                                        l+=1
+
+                                        #pad
+                                        lemmaVectorPadded = pre.padToConstant(lemmaVector, self.w2vDimension, self.max_seq_length)
+                                        #keep every 10th example for testing
+                                        if l % (self.num_lines/10) == 0:
+                                            self.testing_vectors.append(lemmaVectorPadded)
+                                        #otherwise run through LSTM as a training example
                                         else:
-                                            self._training_step_lm(lemmaVectorPadded)
+                                            #add to training collection
+                                            self.training_vectors.append(lemmaVectorPadded)
+                                            #loop through each word in sequence
+                                                #train = current word (j)
+                                                #label = next word (j + 1)
+                                            if self.purpose == "LM":
+                                                self._training_step_lm(lemmaVectorPadded)
+                                            elif self.purpose == "EOS":
+                                                self._training_step_eos(lemmaVectorPadded)
+                                            else:
+                                                self._training_step_lm(lemmaVectorPadded)
                             else:
                                 break
                         f.close()
@@ -284,6 +282,21 @@ class LSTM_keras:
                                 self._training_step_eos(sent)
                             else:
                                 self._training_step_lm(sent)
+            #if no file give, use loaded vectors
+            else:
+                for i in range(self.num_epochs):
+                    #shuffle
+                    shuffle(self.training_vectors)
+
+                    #iterate through all training instances
+                    for sent in self.training_vectors:
+                        #loop through each word in sequence
+                        if self.purpose == "LM":
+                            self._training_step_lm(sent)
+                        elif self.purpose == "EOS":
+                            self._training_step_eos(sent)
+                        else:
+                            self._training_step_lm(sent)
         #if learning embeddings
         else:
             print("not yet implemented")
@@ -400,13 +413,13 @@ class LSTM_keras:
         for j in range(self.max_seq_length-1):
             if j == self.max_seq_length - 1 or np.all(item[j+1] == np.zeros(self.w2vDimension)):
                 gold = np.array([1,0])
-                print("label", gold)
                 self.model.train_on_batch(item[j].reshape(1,1,self.w2vDimension), gold.reshape(1,2))
                 #reset model cell states
                 self.model.reset_states()
+                #break out of the training
+                break
             else:
                 gold = np.array([0,1])
-                print("label", gold)
                 self.model.train_on_batch(item[j].reshape(1,1,self.w2vDimension), gold.reshape(1,2))
 
 
@@ -466,18 +479,25 @@ class LSTM_keras:
 
     #pickles a given vector to a given location
     def pickleData(self, vector, location):
-        pickle.dump(vector, location)
+        f = open(location, "wb")
+        pickle.dump(vector, f)
+        f.close()
 
 #################################################
 
     #unpickles from a location
         #vector = unpickleData(location)
     def unpickleData(self, location):
-        return pickle.load(location)
+        f = open(location, "rb")
+        saved = pickle.load(f)
+        f.close()
+        return saved
 
 
 #################################################
 
+    #TODO currently not working
+        #TODO try to.yaml()?
     #save model to .json
     def saveModel(self, location):
         self.model_json = self.model.to_json()
@@ -486,6 +506,7 @@ class LSTM_keras:
 
 #################################################
 
+    #TODO test more
     #save weightse to .h5
     def saveWeights(self, location):
         self.model.save_weights(location)
@@ -493,12 +514,14 @@ class LSTM_keras:
 
 #################################################
 
+    #TODO currently not working
     #load model from .json
     def loadModel(self, location):
         self.model = model_from_json(location)
 
 #################################################
 
+    #TODO test more
     #load weights from .h5
     def loadWeights(self, location):
         self.model.load_weights(location)
