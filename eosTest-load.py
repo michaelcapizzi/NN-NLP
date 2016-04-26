@@ -2,6 +2,8 @@ from gensim import models as g
 import Models.Model as m
 import sys
 
+#script for when pre-processing of data is NOT required
+
 #sys.argv[1] = file to process for data
 #sys.argv[2] = number of lines to take from file
 #sys.argv[3] = word2vec file
@@ -23,17 +25,21 @@ model.prepareData(sys.argv[1], int(sys.argv[2]))
 
 model.buildModel()
 
+print("loading training data")
+model.training_vectors = model.unpickleData("training_instances/" + sys.argv[9])
+print("length of training", len(model.training_vectors))
+
+print("loading tesitng data")
+model.testing_vectors = model.unpickleData("training_instances/" + sys.argv[10])
+print("length of testing", len(model.testing_vectors))
+
 print("training")
 model.train(sys.argv[1])
 
 print("testing")
 model.test_eos()
 
-print("pickling training data")
-model.pickleData(model.training_vectors, sys.argv[9])
 
-print("pickling testing data")
-model.pickleData(model.testing_vectors, sys.argv[10])
 
 print("hyperparameters")
 print("number of lines", sys.argv[2])

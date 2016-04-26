@@ -8,7 +8,7 @@ import Utils.PreProcessing as pre
 import Utils.Evaluation as e
 import Data as d
 
-#TODO test `lm` usage
+#TODO add capacity for multiple layers
 
 class LSTM_keras:
     """
@@ -141,6 +141,16 @@ class LSTM_keras:
         elif self.purpose == "EOS":
             #create data class
             self.data = d.Data(filepath=fPath, lineSeparated=True)
+            #open file
+            f = open(fPath, "rb")
+            #if reading whole file, get number of lines
+            if num_lines == 0:
+                line_counter = 0
+                for line in f:
+                    line_counter += 1
+                f.close()
+                self.num_lines = line_counter
+
         #default to language modeling
         else:
             #create data class
