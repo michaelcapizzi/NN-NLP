@@ -210,7 +210,6 @@ class LSTM_keras:
                 print("starting processors server")
                 self.data.startServer()
                 for i in range(self.num_epochs):
-                    print("epoch", (str(i+1)))
                     #if file text must be processed
                         #only relevant for first epoch
                     if not self.training_vectors and i == 0:
@@ -276,7 +275,11 @@ class LSTM_keras:
                         shuffle(self.training_vectors)
 
                         #iterate through all training instances
-                        for sent in self.training_vectors:
+                        for k in range(len(self.training_vectors)):
+                            if k % 100 == 0:
+                                print("epoch", str(i+1))
+                                print("training instance %s of %s" %(str(k+1), str(len(self.training_vectors))))
+                            sent = self.training_vectors[i]
                             #loop through each word in sequence
                             if self.purpose == "LM":
                                 self._training_step_lm(sent)
@@ -360,8 +363,8 @@ class LSTM_keras:
             #bail on sentence when the next word is np.zeros
                 #either because it's padding or it's not in the word2vec vocabulary
             if np.all(item[j+1] != np.zeros(self.w2vDimension)):
-                print("time step", j)
-                print("next word", jPlus1)
+                # print("time step", j)
+                # print("next word", jPlus1)
                 #set gold label
                 gold = np.zeros(self.vocSize)
                 gold[self.data.vocLemmaToIDX[jPlus1]] = 1.0

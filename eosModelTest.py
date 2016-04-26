@@ -30,10 +30,19 @@ print("testing")
 model.test_eos()
 
 print("pickling training data")
-model.pickleData(model.training_vectors, "train.pickle")
+model.pickleData(model.training_vectors, sys.argv[9])
 
 print("pickling testing data")
-model.pickleData(model.testing_vectors, "test.pickle")
+model.pickleData(model.testing_vectors, sys.argv[10])
+
+print("hyperparameters")
+print("number of lines", sys.argv[2])
+print("word2vec", sys.argv[3])
+print("max sentence length", sys.argv[4])
+print("c_size", sys.argv[5])
+print("number of epochs", sys.argv[6])
+print("loss function", sys.argv[7])
+print("optimizer", sys.argv[8])
 
 # print("saving weights")
 # model.saveWeights("weights.h5")
