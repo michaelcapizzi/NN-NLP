@@ -144,7 +144,7 @@ class LSTM_keras:
                         b_regularizer=self.b_regularizer,
                         dropout_W=self.dropout_W,
                         dropout_U=self.dropout_U,
-                        return_sequences=False,           #True when using more than one layer
+                        return_sequences=True,           #True when using more than one layer
                         stateful=True#,
                         # batch_input_shape=(1,1,self.w2vDimension)
                     ))
