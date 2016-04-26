@@ -78,7 +78,6 @@ class LSTM_keras:
             #note: masking layer not needed here as it is handled in embedding layer
         else:
             #get the dimensions from the arguments
-            #TODO what is this used for?
             self.w2vDimension = w2vDimension
             #manually add a masking layer (to handle variable length of sequences)
                 #http://keras.io/layers/core/#masking
@@ -211,6 +210,7 @@ class LSTM_keras:
                 print("starting processors server")
                 self.data.startServer()
                 for i in range(self.num_epochs):
+                    print("epoch", (str(i+1)))
                     #if file text must be processed
                         #only relevant for first epoch
                     if not self.training_vectors and i == 0:
