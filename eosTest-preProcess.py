@@ -42,7 +42,7 @@ model.pickleData(model.testing_vectors, sys.argv[11])
 
 if len(sys.argv) == 13:
     print("saving weights")
-    model.saveWeights("test-weights.h5")
+    model.saveWeights(sys.argv[12])
 
 print("hyperparameters")
 print("number of lines", sys.argv[2])
