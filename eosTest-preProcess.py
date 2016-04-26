@@ -15,6 +15,8 @@ import sys
 #sys.argv[9] = optimizer
 #sys.argv[10] = pickle file for training data
 #sys.argv[11] = pickle file for testing data
+#sys.argv[12] = OPTIONAL location of .h5 file to save weights
+
 
 print("loading embeddings")
 w2v = g.Word2Vec.load_word2vec_format(sys.argv[3], binary=False)
@@ -38,6 +40,10 @@ model.pickleData(model.training_vectors, sys.argv[10])
 print("pickling testing data")
 model.pickleData(model.testing_vectors, sys.argv[11])
 
+if len(sys.argv) == 13:
+    print("saving weights")
+    model.saveWeights("test-weights.h5")
+
 print("hyperparameters")
 print("number of lines", sys.argv[2])
 print("word2vec", sys.argv[3])
@@ -48,5 +54,3 @@ print("number of epochs", sys.argv[7])
 print("loss function", sys.argv[8])
 print("optimizer", sys.argv[9])
 
-# print("saving weights")
-# model.saveWeights("weights.h5")
