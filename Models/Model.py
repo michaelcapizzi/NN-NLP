@@ -14,6 +14,7 @@ class LSTM_keras:
     """
     builds an LSTM using keras front end that can be used for language modeling or sentence segmentation.  See example: http://keras.io/examples/#sequence-classification-with-lstm
     :param purpose If `EOS`, used for determining end-of-sentence, if `LM` used for language modeling
+    :param num_layers Number of `LSTM` layers
     :param embeddingLayer Embedding_keras class (see Embedding) if vectors are to be learned
     :param embeddingClass `gensim` class of `word2vec`
     :param w2vDimension Dimension of word embeddings
@@ -34,6 +35,7 @@ class LSTM_keras:
 
     def __init__(self,
                  purpose="EOS",
+                 num_layers=1,
                  embeddingLayer=None,
                  embeddingClass=None,
                  w2vDimension=None,
@@ -83,7 +85,9 @@ class LSTM_keras:
                 #http://keras.io/layers/core/#masking
             self.model.add(Masking(mask_value=np.zeros(self.w2vDimension), batch_input_shape=(1,1,self.w2vDimension)))
         #add the LSTM layer
-        self.model.add(LSTM(
+        #for single layer
+        if num_layers == 1:
+            self.model.add(LSTM(
                 output_dim=self.cSize,
                 activation="tanh",
                 inner_activation="hard_sigmoid",
@@ -95,7 +99,55 @@ class LSTM_keras:
                 return_sequences=False,           #True when using more than one layer
                 stateful=True,
                 batch_input_shape=(1,1,self.w2vDimension)
-        ))
+            ))
+        else:
+            #for multilayer
+            for i in range(num_layers):
+                #for first layer
+                if i == 0:
+                    self.model.add(LSTM(
+                        output_dim=self.cSize,
+                        activation="tanh",
+                        inner_activation="hard_sigmoid",
+                        W_regularizer=self.W_regularizer,
+                        U_regularizer=self.U_regularizer,
+                        b_regularizer=self.b_regularizer,
+                        dropout_W=self.dropout_W,
+                        dropout_U=self.dropout_U,
+                        return_sequences=True,           #True when using more than one layer
+                        stateful=True,
+                        batch_input_shape=(1,1,self.w2vDimension)
+                    ))
+                #for last layer
+                elif i == num_layers - 1:
+                    self.model.add(LSTM(
+                        output_dim=self.cSize,
+                        activation="tanh",
+                        inner_activation="hard_sigmoid",
+                        W_regularizer=self.W_regularizer,
+                        U_regularizer=self.U_regularizer,
+                        b_regularizer=self.b_regularizer,
+                        dropout_W=self.dropout_W,
+                        dropout_U=self.dropout_U,
+                        return_sequences=False,           #True when using more than one layer
+                        stateful=True#,
+                        # batch_input_shape=(1,1,self.w2vDimension)
+                    ))
+                #for middle layer(s)
+                else:
+                    self.model.add(LSTM(
+                        output_dim=self.cSize,
+                        activation="tanh",
+                        inner_activation="hard_sigmoid",
+                        W_regularizer=self.W_regularizer,
+                        U_regularizer=self.U_regularizer,
+                        b_regularizer=self.b_regularizer,
+                        dropout_W=self.dropout_W,
+                        dropout_U=self.dropout_U,
+                        return_sequences=False,           #True when using more than one layer
+                        stateful=True#,
+                        # batch_input_shape=(1,1,self.w2vDimension)
+                    ))
 
 #################################################
 
