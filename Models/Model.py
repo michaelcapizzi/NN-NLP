@@ -8,7 +8,6 @@ import Utils.PreProcessing as pre
 import Utils.Evaluation as e
 import Data as d
 
-#TODO add capacity for multiple layers
 
 class LSTM_keras:
     """
@@ -46,7 +45,7 @@ class LSTM_keras:
                  b_regularizer=None,
                  dropout_W=0,
                  dropout_U=0,
-                 loss_function="categorical_crossentropy",
+                 loss_function="binary_crossentropy",
                  optimizer="rmsprop",
                  num_epochs=5,
                  training_vector=None,
