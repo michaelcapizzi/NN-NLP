@@ -21,7 +21,7 @@ import sys
 print("loading embeddings")
 w2v = g.Word2Vec.load_word2vec_format(sys.argv[3], binary=False)
 
-model = m.LSTM_keras(num_layers=sys.argv[5], embeddingClass=w2v, w2vDimension=int(len(w2v["the"])), max_seq_length=int(sys.argv[4]), cSize=int(sys.argv[6]), num_epochs=int(sys.argv[7]), loss_function=sys.argv[8], optimizer=sys.argv[9])
+model = m.LSTM_keras(num_layers=int(sys.argv[5]), embeddingClass=w2v, w2vDimension=int(len(w2v["the"])), max_seq_length=int(sys.argv[4]), cSize=int(sys.argv[6]), num_epochs=int(sys.argv[7]), loss_function=sys.argv[8], optimizer=sys.argv[9])
 
 print("preparing data file")
 model.prepareData(sys.argv[1], int(sys.argv[2]))
