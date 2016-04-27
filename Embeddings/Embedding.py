@@ -17,8 +17,14 @@ class Embedding_keras:
     :param dropout
     """
 
+    #eRandom = Embedding_keras(load_w2v=False, voc_size=1000, w2v_dimension=200, max_sequence_length=30)
+    #eLoaded = Embedding_keras(load_w2v=True, gensim_class = w2v, voc_size=len(w2v.index2word), w2v_dimension=len(w2v["the"]), max_sequence_length=30)
+
     def __init__(self, load_w2v=False, gensim_class=None, voc_size=None, w2v_dimension=200, W_regularizer=None, W_constraint=None, activity_regularizer=None, mask_zero=True, max_sequence_length=30, dropout=0):
         #hyper-parameters
+        # if mask_zero:
+        #     self.voc_size = voc_size + 1
+        # else:
         self.voc_size = voc_size
         self.w2v_dimension = w2v_dimension
         self.init = "uniform"
@@ -64,7 +70,7 @@ class Embedding_keras:
                 self.weights = np.zeros((self.voc_size + 1, self.w2v_dimension))        #TODO confirm this is correct for masking
                 #populate weights
                 #TODO confirm this is correct for masking
-                for i in range(len(vocab) + 1):
+                for i in range(len(vocab)):
                     self.weights[i + 1,:] = self.w2v[vocab[i]]       #populate each row in weight matrix with the pretrained vector
             else:
                 self.weights = np.zeros((self.voc_size, self.w2v_dimension))
@@ -78,7 +84,6 @@ class Embedding_keras:
             self.layer = embeddings.Embedding(
                     input_dim=self.voc_size,
                     output_dim=self.w2v_dimension,
-                    init="uniform",
                     input_length=self.max_seq_length,
                     W_regularizer=self.W_regularizer,
                     W_constraint=self.W_constraint,
