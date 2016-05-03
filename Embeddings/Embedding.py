@@ -2,6 +2,9 @@ from keras.models import *
 from keras.layers import *
 import numpy as np
 
+#TODO continue testing
+    #random init seems to work
+    #TODO test situation where we begin with initialized values
 class Embedding_keras:
     """
     builds the embedding layer to be used and updated during training
