@@ -100,13 +100,13 @@ class Embedding_keras:
 
             #build embedding weights matrix
             if self.mask_zero:
-                self.weights = np.zeros((self.voc_size + 1, self.w2vDimension))        #TODO confirm this is correct for masking
+                self.weights = np.zeros((self.vocSize + 1, self.w2vDimension))        #TODO confirm this is correct for masking
                 #populate weights
                 #TODO confirm this is correct for masking
                 for i in range(len(vocab)):
                     self.weights[i + 1,:] = self.w2v[vocab[i]]       #populate each row in weight matrix with the pretrained vector
             else:
-                self.weights = np.zeros((self.voc_size, self.w2vDimension))
+                self.weights = np.zeros((self.vocSize, self.w2vDimension))
                 #populate weights
                 for i in range(len(vocab)):
                     self.weights[i,:] = self.w2v[vocab[i]]           #populate each row in weight matrix with the pretrained vector
@@ -115,7 +115,7 @@ class Embedding_keras:
 
             #build layer
             self.layer = embeddings.Embedding(
-                    input_dim=self.voc_size,
+                    input_dim=self.vocSize,
                     output_dim=self.w2vDimension,
                     input_length=1,
                     batch_input_shape=(1,1),

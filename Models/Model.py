@@ -567,10 +567,28 @@ class LSTM_keras:
 
     #tests the model for EOS detection on all sentences reserved for testing
     def test_eos_embed(self):
-        print("not yet implemented")
+        if self.purpose != "EOS":
+            print("run test_lm to properly test the model.")
+        else:
+            allResults = []
+            for test_item in self.testing_vectors:
+                results = self._testing_step_eos_embed(test_item)
+                for r in results:
+                    allResults.append(r)
+                #final results
+                finalTP = allResults.count("tp")
+                finalTN = allResults.count("tn")
+                finalFP = allResults.count("fp")
+                finalFN = allResults.count("fn")
+                finalPrecision = e.precision(finalTP, finalFP)
+                finalRecall = e.recall(finalTP, finalFN)
+                finalF1 = e.f1(finalPrecision, finalRecall)
+                print("final precision", finalPrecision)
+                print("final recall", finalRecall)
+                print("final f1", finalF1)
 
 
-#################################################
+        #################################################
 
 
     #trains the model on one training sentence
@@ -660,14 +678,16 @@ class LSTM_keras:
         for j in range(self.max_seq_length-1):
             if j == self.max_seq_length - 1 or item[j+1] == 0:
                 gold = np.array([1,0])
-                self.model.train_on_batch(item[j].reshape(1,1), gold.reshape(1,2))
+                # self.model.train_on_batch(item[j].reshape(1,1), gold.reshape(1,2))
+                self.model.train_on_batch(np.array([item[j]]), gold.reshape(1,2))
                 #reset model cell states
                 self.model.reset_states()
                 #break out of the training
                 break
             else:
                 gold = np.array([0,1])
-                self.model.train_on_batch(item[j].reshape(1,1), gold.reshape(1,2))
+                # self.model.train_on_batch(item[j].reshape(1,1), gold.reshape(1,2))
+                self.model.train_on_batch(np.array([item[j]]), gold.reshape(1,2))
 
 
 #################################################
@@ -721,6 +741,54 @@ class LSTM_keras:
         print("sentence f1", f1)
         return results
 
+
+    def _testing_step_eos_embed(self, item):
+        sentence = []
+        results = []
+        for m in range(self.max_seq_length-1):
+            #get distribution of labels
+            distribution = self.model.predict_on_batch(np.array([item[m]]))
+            #get argmax of softmax
+            label = np.argmax(distribution)
+            #get actual
+            if m == self.max_seq_length - 1 or item[m + 1] == 0:
+                actual = np.argmax(np.array([1,0]))
+            else:
+                actual = np.argmax(np.array([0,1]))
+            #get the word associated with the current vector
+            word = self.data.vocIDXtoLemma.get(item[m])
+            #add to sentence
+            sentence.append(word)
+            print("current sentence", sentence)
+            print("predicted label", label)
+            print("actual label", actual)
+            #record results
+            if actual == 0 and label == 0:
+                results.append("tp")
+                print("end of sentence")
+                break
+            elif actual == 0 and label == 1:
+                results.append("fn")
+                print("end of sentence")
+                break
+            elif actual == 1 and label == 0:
+                results.append("fp")
+            else:
+                results.append("tn")
+        #reset model cell states
+        self.model.reset_states()
+        #get sentence results
+        tp = results.count("tp")
+        tn = results.count("tn")
+        fp = results.count("fp")
+        fn = results.count("fn")
+        precision = e.precision(tp, fp)
+        recall = e.recall(tp, fn)
+        f1 = e.f1(precision, recall)
+        print("sentence precision", precision)
+        print("sentence recall", recall)
+        print("sentence f1", f1)
+        return results
 
 #################################################
 
