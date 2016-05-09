@@ -7,6 +7,7 @@ import pickle
 import Utils.PreProcessing as pre
 import Utils.Evaluation as e
 import Data as d
+import Models.Embedding as e
 
 
 class LSTM_keras:
@@ -14,7 +15,7 @@ class LSTM_keras:
     builds an LSTM using keras front end that can be used for language modeling or sentence segmentation.  See example: http://keras.io/examples/#sequence-classification-with-lstm
     :param purpose If `EOS`, used for determining end-of-sentence, if `LM` used for language modeling
     :param num_layers Number of `LSTM` layers
-    :param embeddingLayer Embedding_keras class (see Embedding) if vectors are to be learned
+    :param embeddingLayerClass Embedding_keras class (see Embedding) if vectors are to be learned
     :param embeddingClass `gensim` class of `word2vec`
     :param w2vDimension Dimension of word embeddings
     :param cSize Size of cell state
@@ -35,7 +36,7 @@ class LSTM_keras:
     def __init__(self,
                  purpose="EOS",
                  num_layers=1,
-                 embeddingLayer=None,
+                 embeddingLayerClass=None,
                  embeddingClass=None,
                  w2vDimension=None,
                  cSize=100,
@@ -45,7 +46,7 @@ class LSTM_keras:
                  b_regularizer=None,
                  dropout_W=0,
                  dropout_U=0,
-                 loss_function="binary_crossentropy",
+                 loss_function="categorical_crossentropy",
                  optimizer="rmsprop",
                  num_epochs=5,
                  training_vector=None,
@@ -53,7 +54,7 @@ class LSTM_keras:
                  ):
         self.purpose = purpose
         self.num_lines = None
-        self.embeddingLayer = embeddingLayer
+        self.embeddingLayerClass = embeddingLayerClass
         self.embeddingClass = embeddingClass
         self.num_epochs = num_epochs
         self.max_seq_length = max_seq_length
@@ -71,11 +72,11 @@ class LSTM_keras:
         self.optimizer = optimizer
         self.model_json = None
         self.model = Sequential()
-        if embeddingLayer:
+        if embeddingLayerClass:
             #get the dimensions from the embedding layer
-            self.w2vDimension = embeddingLayer.w2vDimension
+            self.w2vDimension = embeddingLayerClass.w2vDimension
             #build the embedding layer
-            self.model.add(embeddingLayer)
+            self.model.add(embeddingLayerClass.layer)
             #note: masking layer not needed here as it is handled in embedding layer
         else:
             #get the dimensions from the arguments
@@ -129,8 +130,7 @@ class LSTM_keras:
                         dropout_W=self.dropout_W,
                         dropout_U=self.dropout_U,
                         return_sequences=False,           #True when using more than one layer
-                        stateful=True#,
-                        # batch_input_shape=(1,1,self.w2vDimension)
+                        stateful=True
                     ))
                 #for middle layer(s)
                 else:
@@ -144,8 +144,7 @@ class LSTM_keras:
                         dropout_W=self.dropout_W,
                         dropout_U=self.dropout_U,
                         return_sequences=True,           #True when using more than one layer
-                        stateful=True#,
-                        # batch_input_shape=(1,1,self.w2vDimension)
+                        stateful=True
                     ))
 
 #################################################
@@ -263,7 +262,7 @@ class LSTM_keras:
             #0 = all
         #training_vector = vector of training instances
     def train(self, fPath):
-        if not self.embeddingLayer:
+        if not self.embeddingLayerClass:
             if fPath:
                 #open file
                 f = open(fPath, "rb")

@@ -16,26 +16,24 @@ class Embedding_keras:
     :param W_constraint
     :param activity_regularizer
     :param mask_zero
-    :param max_sequence_length The maximum sequence that will be used in `LSTM`
     :param dropout
     """
 
-    #eRandom = Embedding_keras(load_w2v=False, voc_size=1000, w2v_dimension=200, max_sequence_length=30)
-    #eLoaded = Embedding_keras(load_w2v=True, gensim_class = w2v, voc_size=len(w2v.index2word), w2v_dimension=len(w2v["the"]), max_sequence_length=30)
+    #eRandom = Embedding_keras(load_w2v=False, voc_size=1000, w2v_dimension=200)
+    #eLoaded = Embedding_keras(load_w2v=True, gensim_class = w2v, voc_size=len(w2v.index2word), w2v_dimension=len(w2v["the"]))
 
-    def __init__(self, load_w2v=False, gensim_class=None, voc_size=None, w2v_dimension=200, W_regularizer=None, W_constraint=None, activity_regularizer=None, mask_zero=True, max_sequence_length=30, dropout=0):
+    def __init__(self, load_w2v=False, gensim_class=None, voc_size=None, w2vDimension=200, W_regularizer=None, W_constraint=None, activity_regularizer=None, mask_zero=True, dropout=0):
         #hyper-parameters
         # if mask_zero:
         #     self.voc_size = voc_size + 1
         # else:
         self.voc_size = voc_size
-        self.w2v_dimension = w2v_dimension
+        self.w2vDimension = w2vDimension
         self.init = "uniform"
         self.W_regularizer = W_regularizer
         self.W_constraint = W_constraint
         self.activity_regularizer = activity_regularizer
         self.mask_zero = mask_zero
-        self.max_seq_length = max_sequence_length
         self.dropout = dropout
         self.weights = None
         #randomly initialize word vectors?  Or initialize with pretrained?
@@ -50,9 +48,10 @@ class Embedding_keras:
         if not self.load_w2v:
             self.layer = embeddings.Embedding(
                     input_dim=self.voc_size,
-                    output_dim=self.w2v_dimension,
+                    output_dim=self.w2vDimension,
                     init="uniform",
-                    input_length=self.max_seq_length,
+                    input_length=1,
+                    batch_input_shape=(1,1),            #handles one one-hot vector at a time
                     W_regularizer=self.W_regularizer,
                     W_constraint=self.W_constraint,
                     activity_regularizer=self.activity_regularizer,
@@ -70,13 +69,13 @@ class Embedding_keras:
 
             #build embedding weights matrix
             if self.mask_zero:
-                self.weights = np.zeros((self.voc_size + 1, self.w2v_dimension))        #TODO confirm this is correct for masking
+                self.weights = np.zeros((self.voc_size + 1, self.w2vDimension))        #TODO confirm this is correct for masking
                 #populate weights
                 #TODO confirm this is correct for masking
                 for i in range(len(vocab)):
                     self.weights[i + 1,:] = self.w2v[vocab[i]]       #populate each row in weight matrix with the pretrained vector
             else:
-                self.weights = np.zeros((self.voc_size, self.w2v_dimension))
+                self.weights = np.zeros((self.voc_size, self.w2vDimension))
                 #populate weights
                 for i in range(len(vocab)):
                     self.weights[i,:] = self.w2v[vocab[i]]           #populate each row in weight matrix with the pretrained vector
@@ -86,8 +85,9 @@ class Embedding_keras:
             #build layer
             self.layer = embeddings.Embedding(
                     input_dim=self.voc_size,
-                    output_dim=self.w2v_dimension,
-                    input_length=self.max_seq_length,
+                    output_dim=self.w2vDimension,
+                    input_length=1,
+                    batch_input_shape=(1,1),
                     W_regularizer=self.W_regularizer,
                     W_constraint=self.W_constraint,
                     activity_regularizer=self.activity_regularizer,
