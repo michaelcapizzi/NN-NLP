@@ -14,33 +14,24 @@ import Models.Model as m
 
 
 print("randomized embedding layer")
+eRandom = e.Embedding_keras()
 
-eRandom = e.Embedding_keras(voc_size=10000)
+print("calculating vocab size")
+eRandom.getVocabSize("cocaForLM.txt", 50)
 
 print("building random initialized layer")
 eRandom.build()
-
-# input_array = np.random.randint(100000, size=(1,1))
-#
-# mod = Sequential()
-#
-# mod.add(eRandom.layer)
-#
-# mod.compile("rmsprop", "mse")
-#
-# output_array=mod.predict(input_array)
-
-
 
 randomModel = m.LSTM_keras(
                             embeddingLayerClass=eRandom,
                             num_epochs=1
 )
-#
-# print("preparing data file")
-# randomModel.prepareData("cocaForLM.txt", 100)
-#
-# randomModel.buildModel()
+
+
+print("preparing data file")
+randomModel.prepareData("cocaForLM.txt", 50)
+
+randomModel.buildModel()
 
 
 

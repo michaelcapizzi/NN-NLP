@@ -84,43 +84,12 @@ class LSTM_keras:
             #manually add a masking layer (to handle variable length of sequences)
                 #http://keras.io/layers/core/#masking
             self.model.add(Masking(mask_value=np.zeros(self.w2vDimension), batch_input_shape=(1,1,self.w2vDimension)))
-        #add the LSTM layer
-        #for single layer
-        if num_layers == 1:
-            self.model.add(LSTM(
-                output_dim=self.cSize,
-                activation="tanh",
-                inner_activation="hard_sigmoid",
-                W_regularizer=self.W_regularizer,
-                U_regularizer=self.U_regularizer,
-                b_regularizer=self.b_regularizer,
-                dropout_W=self.dropout_W,
-                dropout_U=self.dropout_U,
-                return_sequences=False,           #True when using more than one layer
-                stateful=True,
-                batch_input_shape=(1,1,self.w2vDimension)
-            ))
-        else:
-            #for multilayer
-            for i in range(num_layers):
-                #for first layer
-                if i == 0:
-                    self.model.add(LSTM(
-                        output_dim=self.cSize,
-                        activation="tanh",
-                        inner_activation="hard_sigmoid",
-                        W_regularizer=self.W_regularizer,
-                        U_regularizer=self.U_regularizer,
-                        b_regularizer=self.b_regularizer,
-                        dropout_W=self.dropout_W,
-                        dropout_U=self.dropout_U,
-                        return_sequences=True,           #True when using more than one layer
-                        stateful=True,
-                        batch_input_shape=(1,1,self.w2vDimension)
-                    ))
-                #for last layer
-                elif i == num_layers - 1:
-                    self.model.add(LSTM(
+        #add the LSTM layer(s)
+            #if there is an embedding layer
+        if embeddingLayerClass:
+            #for single layer
+            if num_layers == 1:
+                self.model.add(LSTM(
                         output_dim=self.cSize,
                         activation="tanh",
                         inner_activation="hard_sigmoid",
@@ -130,22 +99,119 @@ class LSTM_keras:
                         dropout_W=self.dropout_W,
                         dropout_U=self.dropout_U,
                         return_sequences=False,           #True when using more than one layer
-                        stateful=True
-                    ))
-                #for middle layer(s)
-                else:
-                    self.model.add(LSTM(
-                        output_dim=self.cSize,
-                        activation="tanh",
-                        inner_activation="hard_sigmoid",
-                        W_regularizer=self.W_regularizer,
-                        U_regularizer=self.U_regularizer,
-                        b_regularizer=self.b_regularizer,
-                        dropout_W=self.dropout_W,
-                        dropout_U=self.dropout_U,
-                        return_sequences=True,           #True when using more than one layer
-                        stateful=True
-                    ))
+                        stateful=True,
+                        # batch_input_shape=(1,1,self.w2vDimension)
+                ))
+            else:
+                #for multilayer
+                for i in range(num_layers):
+                    #for first layer
+                    if i == 0:
+                        self.model.add(LSTM(
+                                output_dim=self.cSize,
+                                activation="tanh",
+                                inner_activation="hard_sigmoid",
+                                W_regularizer=self.W_regularizer,
+                                U_regularizer=self.U_regularizer,
+                                b_regularizer=self.b_regularizer,
+                                dropout_W=self.dropout_W,
+                                dropout_U=self.dropout_U,
+                                return_sequences=True,           #True when using more than one layer
+                                stateful=True,
+                                # batch_input_shape=(1,1,self.w2vDimension)
+                        ))
+                    #for last layer
+                    elif i == num_layers - 1:
+                        self.model.add(LSTM(
+                                output_dim=self.cSize,
+                                activation="tanh",
+                                inner_activation="hard_sigmoid",
+                                W_regularizer=self.W_regularizer,
+                                U_regularizer=self.U_regularizer,
+                                b_regularizer=self.b_regularizer,
+                                dropout_W=self.dropout_W,
+                                dropout_U=self.dropout_U,
+                                return_sequences=False,           #True when using more than one layer
+                                stateful=True
+                        ))
+                    #for middle layer(s)
+                    else:
+                        self.model.add(LSTM(
+                                output_dim=self.cSize,
+                                activation="tanh",
+                                inner_activation="hard_sigmoid",
+                                W_regularizer=self.W_regularizer,
+                                U_regularizer=self.U_regularizer,
+                                b_regularizer=self.b_regularizer,
+                                dropout_W=self.dropout_W,
+                                dropout_U=self.dropout_U,
+                                return_sequences=True,           #True when using more than one layer
+                                stateful=True
+                        ))
+        #otherwise
+        else:
+            #add the LSTM layer(s)
+            #for single layer
+            if num_layers == 1:
+                self.model.add(LSTM(
+                    output_dim=self.cSize,
+                    activation="tanh",
+                    inner_activation="hard_sigmoid",
+                    W_regularizer=self.W_regularizer,
+                    U_regularizer=self.U_regularizer,
+                    b_regularizer=self.b_regularizer,
+                    dropout_W=self.dropout_W,
+                    dropout_U=self.dropout_U,
+                    return_sequences=False,           #True when using more than one layer
+                    stateful=True,
+                    batch_input_shape=(1,1,self.w2vDimension)
+                ))
+            else:
+                #for multilayer
+                for i in range(num_layers):
+                    #for first layer
+                    if i == 0:
+                        self.model.add(LSTM(
+                            output_dim=self.cSize,
+                            activation="tanh",
+                            inner_activation="hard_sigmoid",
+                            W_regularizer=self.W_regularizer,
+                            U_regularizer=self.U_regularizer,
+                            b_regularizer=self.b_regularizer,
+                            dropout_W=self.dropout_W,
+                            dropout_U=self.dropout_U,
+                            return_sequences=True,           #True when using more than one layer
+                            stateful=True,
+                            batch_input_shape=(1,1,self.w2vDimension)
+                        ))
+                    #for last layer
+                    elif i == num_layers - 1:
+                        self.model.add(LSTM(
+                            output_dim=self.cSize,
+                            activation="tanh",
+                            inner_activation="hard_sigmoid",
+                            W_regularizer=self.W_regularizer,
+                            U_regularizer=self.U_regularizer,
+                            b_regularizer=self.b_regularizer,
+                            dropout_W=self.dropout_W,
+                            dropout_U=self.dropout_U,
+                            return_sequences=False,           #True when using more than one layer
+                            stateful=True
+                        ))
+                    #for middle layer(s)
+                    else:
+                        self.model.add(LSTM(
+                            output_dim=self.cSize,
+                            activation="tanh",
+                            inner_activation="hard_sigmoid",
+                            W_regularizer=self.W_regularizer,
+                            U_regularizer=self.U_regularizer,
+                            b_regularizer=self.b_regularizer,
+                            dropout_W=self.dropout_W,
+                            dropout_U=self.dropout_U,
+                            return_sequences=True,           #True when using more than one layer
+                            stateful=True
+                        ))
 
 #################################################
 
@@ -155,8 +221,15 @@ class LSTM_keras:
     def prepareData(self, fPath, num_lines):
         if num_lines != 0:
             self.num_lines = num_lines
-        #if model to be used for language modeling
-        if self.purpose == "LM":
+        #if model to be used for language modeling *and* an embedding layer,
+            # vocSize has already been calculated
+        if self.purpose == "LM" and self.embeddingLayerClass:
+            #create data class
+            self.data = d.Data(filepath=fPath, lineSeparated=True)
+            self.vocSize = self.embeddingLayerClass.vocSize
+        #else if model to be used for language modeling *but* no embedding layer,
+            # vocSize must be calculated now
+        elif self.purpose == "LM":
             #create data class
             self.data = d.Data(filepath=fPath, lineSeparated=True)
             #estimate vocabulary size
@@ -201,28 +274,28 @@ class LSTM_keras:
                 f.close()
                 self.num_lines = line_counter
 
-        #default to language modeling
-        else:
-            #create data class
-            self.data = d.Data(filepath=fPath, lineSeparated=True)
-            #estimate vocabulary size
-            #open file
-            f = open(fPath, "rb")
-            #make counter to estimate voc size
-            vocCounter = Counter()
-            #make counter to keep track of number of lines to process
-            line_counter = 0
-            #estimate vocabulary size
-            for line in f:
-                line_counter += 1
-                if line_counter <= num_lines:
-                    clean = line.rstrip()
-                    tokens = clean.split(" ")
-                    for t in tokens:
-                        vocCounter[t] += 1
-            f.close()
-            #set vocabulary size
-            self.vocSize = len(vocCounter.items())
+        # #default to language modeling
+        # else:
+        #     #create data class
+        #     self.data = d.Data(filepath=fPath, lineSeparated=True)
+        #     #estimate vocabulary size
+        #     #open file
+        #     f = open(fPath, "rb")
+        #     #make counter to estimate voc size
+        #     vocCounter = Counter()
+        #     #make counter to keep track of number of lines to process
+        #     line_counter = 0
+        #     #estimate vocabulary size
+        #     for line in f:
+        #         line_counter += 1
+        #         if line_counter <= num_lines:
+        #             clean = line.rstrip()
+        #             tokens = clean.split(" ")
+        #             for t in tokens:
+        #                 vocCounter[t] += 1
+        #     f.close()
+        #     #set vocabulary size
+        #     self.vocSize = len(vocCounter.items())
 
 
 #################################################
