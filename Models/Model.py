@@ -421,9 +421,8 @@ class LSTM_keras:
                 print("starting processors server")
                 self.data.startServer()
                 for i in range(self.num_epochs):
-                    #if file text must be processed
-                        #only relevant for first epoch
-                    if not self.training_vectors and i == 0:
+                    #must process text (also when loading pickled vectors) in order to get indices for lemma lookup
+                    if i == 0:
                         #initialize vectors to house training and testing instances
                         self.training_vectors = []
                         self.testing_vectors = []
