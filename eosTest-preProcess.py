@@ -32,7 +32,7 @@ print("training")
 model.train(sys.argv[1])
 
 print("testing")
-model.test_eos()
+model.test_eos_w2v()
 
 print("pickling training data")
 model.pickleData(model.training_vectors, sys.argv[10])

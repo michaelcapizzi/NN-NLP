@@ -1,13 +1,13 @@
 from keras.models import *
 from keras.layers import *
 import numpy as np
+np.random.seed(1982)  # to guarantee same randomizations each test
 from random import shuffle
 from collections import Counter
 import pickle
 import Utils.PreProcessing as pre
 import Utils.Evaluation as e
 import Data as d
-import Models.Embedding as e
 
 
 class LSTM_keras:
@@ -274,29 +274,6 @@ class LSTM_keras:
                 f.close()
                 self.num_lines = line_counter
 
-        # #default to language modeling
-        # else:
-        #     #create data class
-        #     self.data = d.Data(filepath=fPath, lineSeparated=True)
-        #     #estimate vocabulary size
-        #     #open file
-        #     f = open(fPath, "rb")
-        #     #make counter to estimate voc size
-        #     vocCounter = Counter()
-        #     #make counter to keep track of number of lines to process
-        #     line_counter = 0
-        #     #estimate vocabulary size
-        #     for line in f:
-        #         line_counter += 1
-        #         if line_counter <= num_lines:
-        #             clean = line.rstrip()
-        #             tokens = clean.split(" ")
-        #             for t in tokens:
-        #                 vocCounter[t] += 1
-        #     f.close()
-        #     #set vocabulary size
-        #     self.vocSize = len(vocCounter.items())
-
 
 #################################################
 
@@ -379,7 +356,7 @@ class LSTM_keras:
                                         l+=1
 
                                         #pad
-                                        lemmaVectorPadded = pre.padToConstant(lemmaVector, self.w2vDimension, self.max_seq_length)
+                                        lemmaVectorPadded = pre.padEmbeddingToConstant(lemmaVector, self.w2vDimension, self.max_seq_length)
                                         #keep every 10th example for testing
                                         if l % (self.num_lines/10) == 0:
                                             self.testing_vectors.append(lemmaVectorPadded)
@@ -389,13 +366,13 @@ class LSTM_keras:
                                             self.training_vectors.append(lemmaVectorPadded)
                                             #loop through each word in sequence
                                                 #train = current word (j)
-                                                #label = next word (j + 1)
+                                                #label = next word (j + 1) or EOS label
                                             if self.purpose == "LM":
-                                                self._training_step_lm(lemmaVectorPadded)
+                                                self._training_step_lm_w2v(lemmaVectorPadded)
                                             elif self.purpose == "EOS":
-                                                self._training_step_eos(lemmaVectorPadded)
+                                                self._training_step_eos_w2v(lemmaVectorPadded)
                                             else:
-                                                self._training_step_lm(lemmaVectorPadded)
+                                                self._training_step_lm_w2v(lemmaVectorPadded)
                             else:
                                 break
                         f.close()
@@ -415,12 +392,12 @@ class LSTM_keras:
                             sent = self.training_vectors[i]
                             #loop through each word in sequence
                             if self.purpose == "LM":
-                                self._training_step_lm(sent)
+                                self._training_step_lm_w2v(sent)
                             elif self.purpose == "EOS":
-                                self._training_step_eos(sent)
+                                self._training_step_eos_w2v(sent)
                             else:
-                                self._training_step_lm(sent)
-            #if no file give, use loaded vectors
+                                self._training_step_lm_w2v(sent)
+            #if no file given, use loaded vectors
             else:
                 for i in range(self.num_epochs):
                     #shuffle
@@ -430,27 +407,124 @@ class LSTM_keras:
                     for sent in self.training_vectors:
                         #loop through each word in sequence
                         if self.purpose == "LM":
-                            self._training_step_lm(sent)
+                            self._training_step_lm_w2v(sent)
                         elif self.purpose == "EOS":
-                            self._training_step_eos(sent)
+                            self._training_step_eos_w2v(sent)
                         else:
-                            self._training_step_lm(sent)
+                            self._training_step_lm_w2v(sent)
         #if learning embeddings
         else:
-            print("not yet implemented")
+            if fPath:
+                #open file
+                f = open(fPath, "rb")
+                #start the server
+                print("starting processors server")
+                self.data.startServer()
+                for i in range(self.num_epochs):
+                    #if file text must be processed
+                        #only relevant for first epoch
+                    if not self.training_vectors and i == 0:
+                        #initialize vectors to house training and testing instances
+                        self.training_vectors = []
+                        self.testing_vectors = []
+                        #counter to keep track of the number of lines to process
+                        c = 0
+                        #counter to keep track of lines to remove for testing
+                        l = 0
 
+                        #counter of words added to indices
+                        cWord = 0
+                        lWord = 0
+                        #iterate through each line
+                        for line in f:
+                            if c <= self.num_lines:
+                                #skip any line that is larger than max length
+                                if len(line.rstrip().split(" ")) < self.max_seq_length:
+
+                                    #annotate line
+                                    self.data.annotateText(line)
+                                    #tokenize most recent sentence
+                                    cWord, lWord = self.data.getTokenized(self.data.rawSents[-1], cWord, lWord)
+                                    print("current sentence in words", self.data.seqWords[-1])
+                                    print("current sentence in lemmas", self.data.seqLemmas[-1])
+                                    #convert most recent sentence to one-hots
+                                    oneHotsVector = pre.convertSentenceToOneHots(self.data.seqLemmas[-1], self.data.vocLemmaToIDX)
+                                    #only keep sentences for training and testing instances that have all words in lookup
+                                    if None not in oneHotsVector:
+                                        #set counter for total number of lines
+                                        c+=1
+                                        #set counter for test items
+                                        l+=1
+
+                                        #pad
+                                        oneHotsVectorPadded = pre.padOneHotToConstant(oneHotsVector, self.max_seq_length)
+                                        #keep every 10th example for testing
+                                        if l % (self.num_lines/10) == 0:
+                                            self.testing_vectors.append(oneHotsVectorPadded)
+                                        #otherwise run through LSTM as a training example
+                                        else:
+                                            #add to training collection
+                                            self.training_vectors.append(oneHotsVectorPadded)
+                                            #loop through each word in sequence
+                                                #train = current word (j)
+                                                #label = next word (j + 1) or EOS label
+                                            if self.purpose == "LM":
+                                                self._training_step_lm_embed(oneHotsVectorPadded)
+                                            elif self.purpose == "EOS":
+                                                self._training_step_eos_embed(oneHotsVectorPadded)
+                                            else:
+                                                self._training_step_lm_embed(oneHotsVectorPadded)
+                            else:
+                                break
+                        f.close()
+                        print("stopping server")
+                        self.data.stopServer()
+
+                    #if not processing text or not first epoch
+                    else:
+                        #shuffle
+                        shuffle(self.training_vectors)
+
+                        #iterate through all training instances
+                        for k in range(len(self.training_vectors)):
+                            if k % 100 == 0:
+                                print("epoch", str(i+1))
+                                print("training instance %s of %s" %(str(k+1), str(len(self.training_vectors))))
+                            sent = self.training_vectors[i]
+                            #loop through each word in sequence
+                            if self.purpose == "LM":
+                                self._training_step_lm_embed(sent)
+                            elif self.purpose == "EOS":
+                                self._training_step_eos_embed(sent)
+                            else:
+                                self._training_step_lm_embed(sent)
+            #if no file given, use loaded vectors
+            else:
+                for i in range(self.num_epochs):
+                    #shuffle
+                    shuffle(self.training_vectors)
+
+                    #iterate through all training instances
+                    for sent in self.training_vectors:
+                        #loop through each word in sequence
+                        if self.purpose == "LM":
+                            self._training_step_lm_embed(sent)
+                        elif self.purpose == "EOS":
+                            self._training_step_eos_embed(sent)
+                        else:
+                            self._training_step_lm_embed(sent)
 
 #################################################
 
 
     #tests the model for language modeling on all sentences reserved for testing
-    def test_lm(self):
+    def test_lm_w2v(self):
         if self.purpose == "EOS":
             print("run test_eos to properly test the model.")
         else:
             allResults = []
             for test_item in self.testing_vectors:
-                sentenceAccuracy = self._testing_step_lm(test_item)
+                sentenceAccuracy = self._testing_step_lm_w2v(test_item)
                 allResults.append(sentenceAccuracy)
                 self.model.reset_states()
             if len(allResults) == 0.0 or sum(allResults) == 0.0:
@@ -460,17 +534,22 @@ class LSTM_keras:
             print("final accuracy", str(averageAccuracy))
 
 
+    #tests the model for language modeling on all sentences reserved for testing
+    def test_lm_embed(self):
+        print("not yet implemented")
+
+
 #################################################
 
 
     #tests the model for EOS detection on all sentences reserved for testing
-    def test_eos(self):
+    def test_eos_w2v(self):
         if self.purpose != "EOS":
             print("run test_lm to properly test the model.")
         else:
             allResults = []
             for test_item in self.testing_vectors:
-                results = self._testing_step_eos(test_item)
+                results = self._testing_step_eos_w2v(test_item)
                 for r in results:
                     allResults.append(r)
                 #final results
@@ -486,11 +565,16 @@ class LSTM_keras:
                 print("final f1", finalF1)
 
 
+    #tests the model for EOS detection on all sentences reserved for testing
+    def test_eos_embed(self):
+        print("not yet implemented")
+
+
 #################################################
 
 
     #trains the model on one training sentence
-    def _training_step_lm(self, item):
+    def _training_step_lm_w2v(self, item):
         for j in range(self.max_seq_length-1):
             jPlus1 = self.embeddingClass.most_similar(positive=[item[j+1]], topn=1)[0][0]
             #bail on sentence when the next word is np.zeros
@@ -509,11 +593,16 @@ class LSTM_keras:
         self.model.reset_states()
 
 
+    #trains the model on one training sentence
+    def _training_step_lm_embed(self, item):
+        print("not yet implemented")
+
+
 #################################################
 
 
-#tests the model on one testing sentence
-    def _testing_step_lm(self, item):
+    #tests the model on one testing sentence
+    def _testing_step_lm_w2v(self, item):
         sentence = []
         results = []
         for m in range(self.max_seq_length-1):
@@ -544,10 +633,16 @@ class LSTM_keras:
         return sentenceAccuracy
 
 
+    #tests the model on one testing sentence
+    def _testing_step_lm_embed(self, item):
+        print("not yet implemented")
+
+
+
 #################################################
 
 
-    def _training_step_eos(self, item):
+    def _training_step_eos_w2v(self, item):
         for j in range(self.max_seq_length-1):
             if j == self.max_seq_length - 1 or np.all(item[j+1] == np.zeros(self.w2vDimension)):
                 gold = np.array([1,0])
@@ -561,10 +656,24 @@ class LSTM_keras:
                 self.model.train_on_batch(item[j].reshape(1,1,self.w2vDimension), gold.reshape(1,2))
 
 
+    def _training_step_eos_embed(self, item):
+        for j in range(self.max_seq_length-1):
+            if j == self.max_seq_length - 1 or item[j+1] == 0:
+                gold = np.array([1,0])
+                self.model.train_on_batch(item[j].reshape(1,1), gold.reshape(1,2))
+                #reset model cell states
+                self.model.reset_states()
+                #break out of the training
+                break
+            else:
+                gold = np.array([0,1])
+                self.model.train_on_batch(item[j].reshape(1,1), gold.reshape(1,2))
+
+
 #################################################
 
 
-    def _testing_step_eos(self, item):
+    def _testing_step_eos_w2v(self, item):
         sentence = []
         results = []
         for m in range(self.max_seq_length-1):

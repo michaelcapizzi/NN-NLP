@@ -39,7 +39,7 @@ print("training")
 model.train(sys.argv[1])
 
 print("testing")
-model.test_eos()
+model.test_eos_w2v()
 
 if len(sys.argv) == 13:
     print("saving weights")

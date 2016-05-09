@@ -71,10 +71,19 @@ def padToLongest(dictOfSeqs, w2vDim):
 
 
 #pad single sentence (of word vectors) to arbitrary length
-def padToConstant(sentence, w2vDim, maxLength):
+def padEmbeddingToConstant(sentence, w2vDim, maxLength):
     #pad sentence
     for i in range(maxLength-len(sentence)):
         sentence.append(np.zeros(w2vDim))
+
+    return sentence
+
+
+#pad single sentence (of one-hot vectors) to arbitrary length
+def padOneHotToConstant(sentence, maxLength):
+    #pad sentence
+    for i in range(maxLength-len(sentence)):
+        sentence.append(0)
 
     return sentence
 
@@ -90,6 +99,11 @@ def getVector(word, gensimModel, w2vDim):
 #convert a list of words to list of word embeddings
 def convertSentenceToVec(listOfWords, gensimModel, w2vDim):
     return [getVector(word, gensimModel, w2vDim) for word in listOfWords]
+
+
+#convert a list of words or lemmas to one-hot vectors
+def convertSentenceToOneHots(listOfWords, wordToIDX):
+    return [wordToIDX.get(word) for word in listOfWords]
 
 
 

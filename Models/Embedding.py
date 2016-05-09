@@ -1,6 +1,7 @@
 from keras.models import *
 from keras.layers import *
 import numpy as np
+np.random.seed(1978)  # to guarantee same randomizations each test
 from collections import Counter
 
 #TODO continue testing
