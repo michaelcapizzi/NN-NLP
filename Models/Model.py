@@ -880,16 +880,17 @@ class FF_keras:
         self.optimizer=optimizer
         self.model = Sequential()
 
+
     def buildModel(self):
-        #add initial dropout layer
-        self.model.add(Dropout(
-            p=self.w2v_dropout,
-            input_shape=(self.w2vDimension * self.window_size,)
-        ))
         #add initial dense
         self.model.add(Dense(
             output_dim=self.w2vDimension * self.window_size,
-            init="uniform"
+            init="uniform",
+            input_shape=(self.w2vDimension * self.window_size,)
+        ))
+        #add initial dropout layer
+        self.model.add(Dropout(
+                p=self.w2v_dropout
         ))
         #for each layer
             #i = number of nodes in hidden layer
@@ -899,67 +900,53 @@ class FF_keras:
         c = 0
         for i,j,k in zip(self.hidden_layer_dims,self.activations, self.hidden_dropouts):
             c+=1
-            #when there is only one layer
-            if len(self.hidden_layer_dims) == 1:
-                #add dropout
-                self.model.add(Dropout(
-                    p=k
-                ))
+            print("layer", c)
+            print("hidden size", i)
+            print("dropout amount", k)
+            print("activation", j)
+            #for last layer
+            if c == len(self.hidden_layer_dims):
                 #add dense
                 self.model.add(Dense(
                     output_dim=i,
                     init="uniform"
                 ))
+                #add dropout
+                self.model.add(Dropout(
+                    p=k
+                ))
                 #add activation
                 self.model.add(Activation(
-                    activation="softmax"
+                    activation=j
                 ))
+            #for middle layers
             else:
-                #for first of multiple layers
-                if c == 1:
-                    #add dropout
-                    self.model.add(Dropout(
-                            p=k
-                    ))
-                    #add dense
-                    self.model.add(Dense(
-                        output_dim=i,
-                        init="uniform"
-                    ))
-                    #add activation
-                    self.model.add(Activation(
-                        activation=j
-                    ))
-                #for last layer only
-                elif c == len(self.hidden_layer_dims):
-                    #add dropout
-                    self.model.add(Dropout(
-                            p=k
-                    ))
-                    #add dense
-                    self.model.add(Dense(
-                            output_dim=i,
-                            init="uniform"
-                    ))
-                    #activation will be handled by softmax
-                #for middle layers
-                else:
-                    #add dropout
-                    self.model.add(Dropout(
-                        p=k
-                    ))
-                    #add dense
-                    self.model.add(Dense(
-                        output_dim=i,
-                        init="uniform"
-                    ))
-                    #add activation
-                    self.model.add(Activation(
-                        activation=j
-                    ))
-                #add final softmax layer
-                self.model.add(Activation(
-                        activation="softmax"
+                #add dense
+                self.model.add(Dense(
+                    output_dim=i,
+                    init="uniform"
                 ))
+                #add dropout
+                self.model.add(Dropout(
+                        p=k
+                ))
+                #add activation
+                self.model.add(Activation(
+                    activation=j
+                ))
+        #add final softmax layer
+        self.model.add(Dense(
+            output_dim=2
+        ))
+        self.model.add(Activation(
+                activation="softmax"
+        ))
+        #compile
+        self.model.compile(
+                optimizer=self.optimizer,
+                loss=self.loss_function,
+                metrics=["accuracy"]
+        )
+        self.model.summary()
 
 
