@@ -842,87 +842,124 @@ class LSTM_keras:
 
 
 
+#########################################################################################
+
+class FF_keras:
+
+    def __init__(self,
+                 hidden_layer_dims=[100],
+                 activations=["relu"],
+                 embeddingClass=None,
+                 w2vDimension=None,
+                 window_size=3,
+                 W_regularizer=None,
+                 b_regularizer=None,
+                 W_constraint=None,
+                 b_constraint=None,
+                 loss_regularizer=None,
+                 bias=True,
+                 w2v_dropout=0,
+                 hidden_dropouts=[0],
+                 loss_function="binary_crossentropy",
+                 optimizer="adagrad"
+                 ):
+        self.hidden_layer_dims=hidden_layer_dims
+        self.activations=activations
+        self.embeddingClass=embeddingClass
+        self.w2vDimension=w2vDimension
+        self.window_size=window_size
+        self.W_regularizer=W_regularizer
+        self.b_regularizer=b_regularizer
+        self.W_constraint=W_constraint
+        self.b_constraint=b_constraint
+        self.loss_regularizer=loss_regularizer
+        self.bias=bias
+        self.w2v_dropout=w2v_dropout
+        self.hidden_dropouts=hidden_dropouts
+        self.loss_function=loss_function
+        self.optimizer=optimizer
+        self.model = Sequential()
+
+    def buildModel(self):
+        #add initial dropout layer
+        self.model.add(Dropout(
+            p=self.w2v_dropout,
+            input_shape=(self.w2vDimension * self.window_size,)
+        ))
+        #add initial dense
+        self.model.add(Dense(
+            output_dim=self.w2vDimension * self.window_size,
+            init="uniform"
+        ))
+        #for each layer
+            #i = number of nodes in hidden layer
+            #j = activation of hidden layer
+            #k = dropout for hidden layer
+        #counter for layers
+        c = 0
+        for i,j,k in zip(self.hidden_layer_dims,self.activations, self.hidden_dropouts):
+            c+=1
+            #when there is only one layer
+            if len(self.hidden_layer_dims) == 1:
+                #add dropout
+                self.model.add(Dropout(
+                    p=k
+                ))
+                #add dense
+                self.model.add(Dense(
+                    output_dim=i,
+                    init="uniform"
+                ))
+                #add activation
+                self.model.add(Activation(
+                    activation="softmax"
+                ))
+            else:
+                #for first of multiple layers
+                if c == 1:
+                    #add dropout
+                    self.model.add(Dropout(
+                            p=k
+                    ))
+                    #add dense
+                    self.model.add(Dense(
+                        output_dim=i,
+                        init="uniform"
+                    ))
+                    #add activation
+                    self.model.add(Activation(
+                        activation=j
+                    ))
+                #for last layer only
+                elif c == len(self.hidden_layer_dims):
+                    #add dropout
+                    self.model.add(Dropout(
+                            p=k
+                    ))
+                    #add dense
+                    self.model.add(Dense(
+                            output_dim=i,
+                            init="uniform"
+                    ))
+                    #activation will be handled by softmax
+                #for middle layers
+                else:
+                    #add dropout
+                    self.model.add(Dropout(
+                        p=k
+                    ))
+                    #add dense
+                    self.model.add(Dense(
+                        output_dim=i,
+                        init="uniform"
+                    ))
+                    #add activation
+                    self.model.add(Activation(
+                        activation=j
+                    ))
+                #add final softmax layer
+                self.model.add(Activation(
+                        activation="softmax"
+                ))
 
 
-
-
-
-
-
-
-####################################################################################
-
-"""
-#only generates cost at end of sequence
-#can only generate a prediction for word at N + 1 (where N is length of sentence)
->>> from keras.models import Sequential
-Using TensorFlow backend.
->>> from keras.layers import LSTM, Dense
->>> import numpy as np
->>> w2v_dimension=8             #dimension of the input vector
->>> max_sentence_length=20      #length of each sequence -- HOW TO MAKE VARIABLE?
->>> voc_size=15                 #dimension of output of softmax layer
->>> c_size=5                    #dimension of the c state
-
->>> model = Sequential()
->>> model.add(LSTM(c_size, return_sequences=False, input_shape=(max_sentence_length, w2v_dimension)))
->>> model.add(Dense(voc_size, activation="softmax"))
->>> model.compile(loss="binary_crossentropy", optimizer="rmsprop")
-
-#training data
-#each training instance is a matrix where each row is a word in the sentence
-#length_of_sentence x length_of_w2v
->>> x_train = np.random.random((1000, max_sentence_length, w2v_dimension))
->>> y_train=np.random.random((1000, voc_size))
-
-#testing data
->>> x_val = np.random.random((100, max_sentence_length, w2v_dimension))
->>> y_val=np.random.random((100, voc_size))
-
->>> model.fit(x_train,y_train,batch_size=1,nb_epoch=1,show_accuracy=True,validation_data=(x_val,y_val))
-
-#give it a sequence to predict next word
-#can only predict word for N + 1 (where N is length of sentence)
->>> model.predict(x_val[0:1])   #has shape (batch_size, length_of_sentence, length_of_w2v)
-#returns softmax across vocabulary for next word
-array([[ 0.06752004,  0.06681924,  0.06783251,  0.06644987,  0.06461859,
-         0.06652912,  0.06606538,  0.06768672,  0.06832125,  0.06933279,
-         0.06447952,  0.06615783,  0.06422815,  0.06747453,  0.06648442]])
-
-
-#stateful
-https://www.reddit.com/r/MachineLearning/comments/3dqdqr/keras_lstm_limitations/
->>> from keras.layers import LSTM, Dense
->>> import numpy as np
->>> w2v_dimension=8
->>> max_sentence_length=20
->>> voc_size=15
->>> c_size=5
->>> model=Sequential()
->>> model.add(LSTM(c_size, return_sequences=False, stateful=True,batch_input_shape=(1,max_sentence_length, w2v_dimension)))
-I tensorflow/core/common_runtime/local_device.cc:40] Local device intra op parallelism threads: 8
-I tensorflow/core/common_runtime/direct_session.cc:58] Direct session inter op parallelism threads: 8
->>> model.add(Dense(voc_size, activation="softmax"))
->>> model.compile(loss="binary_crossentropy", optimizer="rmsprop")
-
-
-example: https://github.com/fchollet/keras/blob/master/examples/lstm_text_generation.py
-
-
-http://keras.io/faq/#how-can-i-use-stateful-rnns
-X # this is our input data, of shape (32, 21, 16)   (batch size, length of sequence, vector size)
-# we will feed it to our model in sequences of length 10
-model = Sequential()
-model.add(LSTM(32, batch_input_shape=(32, 10, 16), stateful=True))
-model.add(Dense(16, activation='softmax'))
-model.compile(optimizer='rmsprop', loss='categorical_crossentropy')
-# we train the network to predict the 11th timestep given the first 10:
-model.train_on_batch(X[:, :10, :], np.reshape(X[:, 10, :], (32, 16)))
-# the state of the network has changed. We can feed the follow-up sequences:
-model.train_on_batch(X[:, 10:20, :], np.reshape(X[:, 20, :], (32, 16)))
-# let's reset the states of the LSTM layer:
-model.reset_states()
-# another way to do it in this case:
-model.layers[0].reset_states()
-
-"""
