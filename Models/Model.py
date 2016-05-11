@@ -882,71 +882,77 @@ class FF_keras:
 
 
     def buildModel(self):
-        #add initial dense
-        self.model.add(Dense(
-            output_dim=self.w2vDimension * self.window_size,
-            init="uniform",
-            input_shape=(self.w2vDimension * self.window_size,)
-        ))
-        #add initial dropout layer
-        self.model.add(Dropout(
-                p=self.w2v_dropout
-        ))
-        #for each layer
-            #i = number of nodes in hidden layer
-            #j = activation of hidden layer
-            #k = dropout for hidden layer
-        #counter for layers
-        c = 0
-        for i,j,k in zip(self.hidden_layer_dims,self.activations, self.hidden_dropouts):
-            c+=1
-            print("layer", c)
-            print("hidden size", i)
-            print("dropout amount", k)
-            print("activation", j)
-            #for last layer
-            if c == len(self.hidden_layer_dims):
-                #add dense
-                self.model.add(Dense(
-                    output_dim=i,
-                    init="uniform"
-                ))
-                #add dropout
-                self.model.add(Dropout(
-                    p=k
-                ))
-                #add activation
-                self.model.add(Activation(
-                    activation=j
-                ))
-            #for middle layers
+        try:
+            if not len(self.hidden_layer_dims) == len(self.activations) == len(self.hidden_dropouts):
+                raise Exception
             else:
-                #add dense
+                #add initial dense
                 self.model.add(Dense(
-                    output_dim=i,
-                    init="uniform"
+                    output_dim=self.w2vDimension * self.window_size,
+                    init="uniform",
+                    input_shape=(self.w2vDimension * self.window_size,)
                 ))
-                #add dropout
+                #add initial dropout layer
                 self.model.add(Dropout(
-                        p=k
+                        p=self.w2v_dropout
                 ))
-                #add activation
+                #for each layer
+                    #i = number of nodes in hidden layer
+                    #j = activation of hidden layer
+                    #k = dropout for hidden layer
+                #counter for layers
+                c = 0
+                for i,j,k in zip(self.hidden_layer_dims,self.activations, self.hidden_dropouts):
+                    c+=1
+                    print("layer", c)
+                    print("hidden size", i)
+                    print("dropout amount", k)
+                    print("activation", j)
+                    #for last layer
+                    if c == len(self.hidden_layer_dims):
+                        #add dense
+                        self.model.add(Dense(
+                            output_dim=i,
+                            init="uniform"
+                        ))
+                        #add dropout
+                        self.model.add(Dropout(
+                            p=k
+                        ))
+                        #add activation
+                        self.model.add(Activation(
+                            activation=j
+                        ))
+                    #for middle layers
+                    else:
+                        #add dense
+                        self.model.add(Dense(
+                            output_dim=i,
+                            init="uniform"
+                        ))
+                        #add dropout
+                        self.model.add(Dropout(
+                                p=k
+                        ))
+                        #add activation
+                        self.model.add(Activation(
+                            activation=j
+                        ))
+                #add final softmax layer
+                self.model.add(Dense(
+                    output_dim=2
+                ))
                 self.model.add(Activation(
-                    activation=j
+                        activation="softmax"
                 ))
-        #add final softmax layer
-        self.model.add(Dense(
-            output_dim=2
-        ))
-        self.model.add(Activation(
-                activation="softmax"
-        ))
-        #compile
-        self.model.compile(
-                optimizer=self.optimizer,
-                loss=self.loss_function,
-                metrics=["accuracy"]
-        )
-        self.model.summary()
+                #compile
+                self.model.compile(
+                        optimizer=self.optimizer,
+                        loss=self.loss_function,
+                        metrics=["accuracy"]
+                )
+                self.model.summary()
+        except Exception as e:
+            print("ERROR: Arguments for hidden layers do not match.  \nlength of hidden_layer_dims=%s \nlength of activations=%s  \nlength of hidden_dropouts=%s" %(str(len(self.hidden_layer_dims)), str(len(self.activations)), str(len(self.hidden_dropouts))))
 
 
