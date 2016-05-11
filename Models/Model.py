@@ -904,10 +904,6 @@ class FF_keras:
                 c = 0
                 for i,j,k in zip(self.hidden_layer_dims,self.activations, self.hidden_dropouts):
                     c+=1
-                    print("layer", c)
-                    print("hidden size", i)
-                    print("dropout amount", k)
-                    print("activation", j)
                     #for last layer
                     if c == len(self.hidden_layer_dims):
                         #add dense
