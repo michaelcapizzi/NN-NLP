@@ -902,15 +902,10 @@ class FF_keras:
             if not len(self.hidden_layer_dims) == len(self.activations) == len(self.hidden_dropouts):
                 raise Exception
             else:
-                #add initial dense
-                self.model.add(Dense(
-                    output_dim=self.w2vDimension * self.window_size * 2,
-                    init="uniform",
-                    input_shape=(self.w2vDimension * self.window_size * 2,)
-                ))
                 #add initial dropout layer
                 self.model.add(Dropout(
-                        p=self.w2v_dropout
+                        p=self.w2v_dropout,
+                        input_shape=(self.w2vDimension * self.window_size * 2,)
                 ))
                 #for each layer
                     #i = number of nodes in hidden layer
@@ -999,6 +994,7 @@ class FF_keras:
                         c+=1
                         #process line
                         tokensLabels = pre.convertLineForEOS(line, self.processor, lemmatize)
+                        print(len(tokensLabels), line)
                         #unpack tokens and labels
                         tokens, labels = zip(*tokensLabels)
                         #convert tokens to vector representation
@@ -1031,6 +1027,7 @@ class FF_keras:
     def test(self, fPath, num_lines, lemmatize=True):
         results = []
         if fPath:
+            self.testing_vectors = []
             #open file
             f = open(fPath, "rb")
             #start the server
@@ -1075,11 +1072,11 @@ class FF_keras:
                 predicted = 1
             else:
                 predicted = 0
-            if actual == 0 and predicted == 1:
+            if np.argmax(actual) == 0 and predicted == 1:
                 results.append("fp")
-            elif actual == 1 and predicted == 0:
+            elif np.argmax(actual) == 1 and predicted == 0:
                 results.append("fn")
-            elif actual == 1 and predicted == 1:
+            elif np.argmax(actual) == 1 and predicted == 1:
                 results.append("tp")
             if i % 500 == 0 or i == 0:
                 precision = eval.precision(results.count("tp"), results.count("fp"))
