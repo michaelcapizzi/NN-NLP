@@ -10,6 +10,27 @@ import Utils.Evaluation as e
 import Data as d
 
 
+
+
+
+#pickles a given vector to a given location
+def pickleData(vector, location):
+    f = open(location, "wb")
+    pickle.dump(vector, f)
+    f.close()
+
+#################################################
+
+#unpickles from a location
+#vector = unpickleData(location)
+def unpickleData(location):
+    f = open(location, "rb")
+    saved = pickle.load(f)
+    f.close()
+    return saved
+
+#################################################
+
 class LSTM_keras:
     """
     builds an LSTM using keras front end that can be used for language modeling or sentence segmentation.  See example: http://keras.io/examples/#sequence-classification-with-lstm
@@ -321,7 +342,7 @@ class LSTM_keras:
                 #open file
                 f = open(fPath, "rb")
                 #start the server
-                print("starting processors server")
+                # print("starting processors server")
                 self.data.startServer()
                 for i in range(self.num_epochs):
                     #if file text must be processed
@@ -591,7 +612,7 @@ class LSTM_keras:
                 print("final f1", finalF1)
 
 
-        #################################################
+#################################################
 
 
     #trains the model on one training sentence
@@ -795,25 +816,6 @@ class LSTM_keras:
 
 #################################################
 
-    #pickles a given vector to a given location
-    def pickleData(self, vector, location):
-        f = open(location, "wb")
-        pickle.dump(vector, f)
-        f.close()
-
-#################################################
-
-    #unpickles from a location
-        #vector = unpickleData(location)
-    def unpickleData(self, location):
-        f = open(location, "rb")
-        saved = pickle.load(f)
-        f.close()
-        return saved
-
-
-#################################################
-
     #TODO currently not working
         #TODO try to.yaml()?
     #save model to .json
@@ -865,7 +867,8 @@ class FF_keras:
                  w2v_dropout=0,
                  hidden_dropouts=[0],
                  loss_function="binary_crossentropy",
-                 optimizer="adagrad"
+                 optimizer="adagrad",
+                 num_epochs=5,
                  ):
         self.hidden_layer_dims=hidden_layer_dims
         self.activations=activations
@@ -882,8 +885,12 @@ class FF_keras:
         self.hidden_dropouts=hidden_dropouts
         self.loss_function=loss_function
         self.optimizer=optimizer
+        self.num_epochs=num_epochs
         self.model = Sequential()
-        self.data = None
+        self.data=None
+        self.processor=None
+        self.training_vectors=None
+        self.testing_vectors=None
 
 
 
@@ -897,9 +904,9 @@ class FF_keras:
             else:
                 #add initial dense
                 self.model.add(Dense(
-                    output_dim=self.w2vDimension * self.window_size,
+                    output_dim=self.w2vDimension * self.window_size * 2,
                     init="uniform",
-                    input_shape=(self.w2vDimension * self.window_size,)
+                    input_shape=(self.w2vDimension * self.window_size * 2,)
                 ))
                 #add initial dropout layer
                 self.model.add(Dropout(
@@ -970,12 +977,94 @@ class FF_keras:
     #file = file to use for training
     #num_lines = number of lines to use from training file
         #0 = all
-    def train(self, fPath, num_lines, line_separated=False):
-        self.data = d.Data(filepath=fPath, lineSeparated=line_separated)
+    def train(self, fPath, num_lines, lemmatize=True):
         if fPath:
             #open file
             f = open(fPath, "rb")
             #start the server
-            print("starting processors server")
-            self.data.startServer()
+            self.processor = pre.initializeProcessor()
+            #starting processors server
+            pre.startServer(self.processor)
+            for e in range(self.num_epochs):
+                #if file text must be processed
+                    #only relevant for first epoch
+                if not self.training_vectors and e == 0:
+                    #initialize vectors to house training and testing instances
+                    self.training_vectors = []
+                    self.testing_vectors = []
+                    #counter to keep track of the number of lines to process
+                    c = 0
+                    #counter to keep track of lines to remove for testing
+                    # l = 0
+                    #iterate through each line
+                    for line in f:
+                        if c <= num_lines or num_lines == 0:
+                            #set counter for total number of lines
+                            c+=1
+                            #process line
+                            tokensLabels = pre.convertLineForEOS(line, self.processor, lemmatize)
+                            #unpack tokens and labels
+                            tokens, labels = zip(*tokensLabels)
+                            #convert tokens to vector representation
+                            tokensVector = pre.convertSentenceToVec(tokens, self.embeddingClass, self.w2vDimension)
+                            tokensVectorLabels = zip(tokensVector, labels)
+                            #keep every 10th line for testing
+                            if c % 10 == 0:
+                                [self.testing_vectors.append(t) for t in tokensVectorLabels]
+                            #otherwise store as a training example
+                            else:
+                                [self.training_vectors.append(t) for t in tokensVectorLabels]
+                f.close()
+                print("stopping server")
+                self.processor.__del__()
+                #split vectors and labels
+                train_v, train_l = zip(*self.training_vectors)
+                #convert to lists
+                train_vectors = list(train_v)
+                train_labels = list(train_l)
+                for i in range(len(train_vectors)):
+                    slice_ = self.getSlice(train_vectors, i)
+                    #generate label in proper dimensions
+                    if train_labels[i] == 0:
+                        label = np.array([[0,1]])
+                    else:
+                        label = np.array([[1,0]])
+                    if i % 1000 == 0 or i == 0:
+                        print("epoch", str(e + 1))
+                        print("training instance %s of %s" %(str(i+1), str(len(self.training_vectors))))
+                        print("label", label)
+                    self.model.train_on_batch(slice_.reshape(1,slice_.shape[0]), label)
+                    # self.model.train_on_batch(slice_.reshape((1,1,slice_.shape[0])), label.reshape((1,1,2)))
+        else:
+            print("training from pre-processed not yet implemented")
+
+
+
+
+
+
+
+#################################################
+
+    #generates one slice in the process of iterating through data with sliding window
+    def getSlice(self, list, i):
+        #j == start of slice, inclusive (i - 3)
+        #k == end of slice, exclusive ==> is allowed to go beyond max indexing value (i + 3)
+        j = i - self.window_size
+        k = i + self.window_size
+        #get slice (and pad if necessary)
+        if j < 0:
+            slice_ = list[0:k]
+            #get size of left-padding
+            diff = 0 - j
+            #left pad
+            for d in range(diff):
+                slice_.insert(0, np.zeros(self.w2vDimension))
+        else:
+            slice_ = pre.padEmbeddingToConstant(list[j:k], self.w2vDimension, 6)
+
+        return np.concatenate(slice_)
+
+
+
 
