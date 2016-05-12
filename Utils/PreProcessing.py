@@ -1,6 +1,8 @@
 from processors import *
 import numpy as np
-from keras import preprocessing
+import re
+import itertools
+
 
 """
 Currently not using preprocessing methods available in keras.  Using pyprocessors [https://github.com/myedibleenso/py-processors]
@@ -106,7 +108,123 @@ def convertSentenceToOneHots(listOfWords, wordToIDX):
     return [wordToIDX.get(word) for word in listOfWords]
 
 
+#converts plain text for training/testing in EOS
+# def convertForEOS(fPath, line_separated=False, lemmatize=False, p=None):
+#     #open file
+#     f = open(fPath, "rb")
+#
+#     #if lemmatizing or not line_separated, start server
+#     # if lemmatize or not line_separated:
+#     #     p = initializeProcessor()
+#     #     startServer(p)
+#
+#     #variable to house final tokens and labels zipped
+#     allTokensLabels = []
+#
+#     #regex for punctuation
+#     punctRegex = r'\W'
+#
+#     #regex for numbers
+#     numberRegex = r'\d+'
+#
+#     if line_separated:
+#         for line in f:
+#             #strip punctuation
+#             clean = re.sub(punctRegex, "", line.rstrip())
+#             #replace numbers
+#             clean2 = re.sub(numberRegex, "number", clean.rstrip())
+#             if lemmatize:
+#                 #annotate
+#                 sentence = annotate(p, clean2)
+#                 #get lemmas
+#                 tokens = sentence.lemmas
+#             else:
+#                 #split tokens
+#                 tokens = clean2.split(" ")
+#             #make labels
+#             labels = [0] * len(tokens)
+#             labels[-1] = 1
+#             #zip
+#             tokensLabels = zip(tokens, labels)
+#             #add to allTokensLabels
+#             [allTokensLabels.append(tl) for tl in tokensLabels]
+#     else:
+#         for line in f:
+#             #strip punctuation
+#             clean = re.sub(punctRegex, "", line.rstrip())
+#             #replace numbers
+#             clean2 = re.sub(numberRegex, "number", clean.rstrip())
+#             #annotate
+#             annotated = annotate(p, clean2)
+#             for sentence in annotated.sentences:
+#                 if lemmatize:
+#                     tokens = sentence.lemmas
+#                 else:
+#                     tokens = sentence.words
+#                 #make labels
+#                 labels = [0] * len(tokens)
+#                 labels[-1] = 1
+#                 #zip
+#                 tokensLabels = zip(tokens, labels)
+#                 #add to allTokensLabels
+#                 [allTokensLabels.append(tl) for tl in tokensLabels]
+#
+#     #close file
+#     f.close()
+#
+#     #close server
+#     # if lemmatize or not line_separated:
+#     #     p.__del__()
+#
+#     return allTokensLabels
 
+def convertLineForEOS(line, processor, lemmatize=False):
+    #variable to house final tokens and labels zipped
+    allTokensLabels = []
 
+    #regex for punctuation
+    punctRegex = r'[^\w\']'
+
+    #regex for numbers
+    numberRegex = r'\d+'
+
+    #replace numbers
+    clean = re.sub(numberRegex, "number", line.rstrip())
+
+    #annotate
+    annotated = annotate(processor, clean)
+
+    for sentence in annotated.sentences:
+        #get tokens with punctuation filtered
+        if lemmatize:
+            for t in range(len(sentence.lemmas)):
+                token = sentence.lemmas[t]
+                #if it's not a punctuation token
+                #get label
+                if t == len(sentence.lemmas) - 2:
+                    label = 1
+                else:
+                    label = 0
+                if not re.match(punctRegex, token) and token != "'":
+                    #zip
+                    tokenLabel = (token, label)
+                    #add tokenLabel
+                    allTokensLabels.append(tokenLabel)
+        else:
+            for t in range(len(sentence.words)):
+                token = sentence.words[t]
+                #if it's not a punctuation token
+                #get label (second last token == last word)
+                if t == len(sentence.lemmas) - 2:
+                    label = 1
+                else:
+                    label = 0
+                if not re.match(punctRegex, token) and token != "'":
+                    #zip
+                    tokenLabel = (token, label)
+                    #add tokenLabel
+                    allTokensLabels.append(tokenLabel)
+
+    return allTokensLabels
 
 

@@ -298,7 +298,11 @@ class LSTM_keras:
         ))
 
         #compile
-        self.model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=["accuracy"])
+        self.model.compile(
+                loss=self.loss_function,
+                optimizer=self.optimizer,
+                metrics=["accuracy"]
+        )
 
         #print model summary
         self.model.summary()
@@ -879,6 +883,11 @@ class FF_keras:
         self.loss_function=loss_function
         self.optimizer=optimizer
         self.model = Sequential()
+        self.data = None
+
+
+
+#################################################
 
 
     def buildModel(self):
@@ -934,6 +943,7 @@ class FF_keras:
                         self.model.add(Activation(
                             activation=j
                         ))
+
                 #add final softmax layer
                 self.model.add(Dense(
                     output_dim=2
@@ -941,14 +951,31 @@ class FF_keras:
                 self.model.add(Activation(
                         activation="softmax"
                 ))
+
                 #compile
                 self.model.compile(
                         optimizer=self.optimizer,
                         loss=self.loss_function,
                         metrics=["accuracy"]
                 )
+
+                #print model summary
                 self.model.summary()
         except Exception as e:
             print("ERROR: Arguments for hidden layers do not match.  \nlength of hidden_layer_dims=%s \nlength of activations=%s  \nlength of hidden_dropouts=%s" %(str(len(self.hidden_layer_dims)), str(len(self.activations)), str(len(self.hidden_dropouts))))
 
+
+#################################################
+
+    #file = file to use for training
+    #num_lines = number of lines to use from training file
+        #0 = all
+    def train(self, fPath, num_lines, line_separated=False):
+        self.data = d.Data(filepath=fPath, lineSeparated=line_separated)
+        if fPath:
+            #open file
+            f = open(fPath, "rb")
+            #start the server
+            print("starting processors server")
+            self.data.startServer()
 
