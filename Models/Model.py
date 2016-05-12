@@ -989,13 +989,10 @@ class FF_keras:
                 #if file text must be processed
                     #only relevant for first epoch
                 if not self.training_vectors and e == 0:
-                    #initialize vectors to house training and testing instances
+                    #initialize vector to house training and testing instances
                     self.training_vectors = []
-                    self.testing_vectors = []
                     #counter to keep track of the number of lines to process
                     c = 0
-                    #counter to keep track of lines to remove for testing
-                    # l = 0
                     #iterate through each line
                     for line in f:
                         if c <= num_lines or num_lines == 0:
@@ -1008,15 +1005,10 @@ class FF_keras:
                             #convert tokens to vector representation
                             tokensVector = pre.convertSentenceToVec(tokens, self.embeddingClass, self.w2vDimension)
                             tokensVectorLabels = zip(tokensVector, labels)
-                            #keep every 10th line for testing
-                            if c % 10 == 0:
-                                [self.testing_vectors.append(t) for t in tokensVectorLabels]
-                            #otherwise store as a training example
-                            else:
-                                [self.training_vectors.append(t) for t in tokensVectorLabels]
-                f.close()
-                print("stopping server")
-                self.processor.__del__()
+                            [self.training_vectors.append(t) for t in tokensVectorLabels]
+                    f.close()
+                    print("stopping server")
+                    self.processor.__del__()
                 #split vectors and labels
                 train_v, train_l = zip(*self.training_vectors)
                 #convert to lists
@@ -1032,13 +1024,60 @@ class FF_keras:
                     if i % 1000 == 0 or i == 0:
                         print("epoch", str(e + 1))
                         print("training instance %s of %s" %(str(i+1), str(len(self.training_vectors))))
+                    self.model.train_on_batch(slice_.reshape(1,slice_.shape[0]), label)
+        else:
+            #split vectors and labels
+            train_v, train_l = zip(*self.training_vectors)
+            #convert to lists
+            train_vectors = list(train_v)
+            train_labels = list(train_l)
+            for e in range(self.num_epochs):
+                for i in range(len(train_vectors)):
+                    slice_ = self.getSlice(train_vectors, i)
+                    #generate label in proper dimensions
+                    if train_labels[i] == 0:
+                        label = np.array([[0,1]])
+                    else:
+                        label = np.array([[1,0]])
+                    if i % 1000 == 0 or i == 0:
+                        print("epoch", str(e + 1))
+                        print("training instance %s of %s" %(str(i+1), str(len(self.training_vectors))))
                         print("label", label)
                     self.model.train_on_batch(slice_.reshape(1,slice_.shape[0]), label)
-                    # self.model.train_on_batch(slice_.reshape((1,1,slice_.shape[0])), label.reshape((1,1,2)))
+
+#################################################
+
+    #test a trained model on test data file to be loaded
+    def test(self, fPath, num_lines, lemmatize=True):
+        if fPath:
+            #open file
+            f = open(fPath, "rb")
+            #start the server
+            #start the server
+            self.processor = pre.initializeProcessor()
+            #starting processors server
+            pre.startServer(self.processor)
+            #initialize vector to house testing instances
+            #counter to keep track of the number of lines to process
+            c = 0
+            #iterate through each line
+            for line in f:
+                if c <= num_lines or num_lines == 0:
+                    #set counter for total number of lines
+                    c+=1
+                    #process line
+                    tokensLabels = pre.convertLineForEOS(line, self.processor, lemmatize)
+                    #unpack tokens and labels
+                    tokens, labels = zip(*tokensLabels)
+                    #convert tokens to vector representation
+                    tokensVector = pre.convertSentenceToVec(tokens, self.embeddingClass, self.w2vDimension)
+                    tokensVectorLabels = zip(tokensVector, labels)
+                    [self.testing_vectors.append(t) for t in tokensVectorLabels]
+            f.close()
+            print("stopping server")
+            self.processor.__del__()
         else:
-            print("training from pre-processed not yet implemented")
-
-
+            print("not yet implemented")
 
 
 
