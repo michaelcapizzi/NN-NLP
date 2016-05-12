@@ -1,9 +1,8 @@
 from gensim import models as g
 import Models.Model as m
-import Models.Embedding as e
 import sys
 
-#script for when pre-processing of data is required
+#script for running feed forward neural net over same training and testing data as used in original segmentor
 
 #sys.argv[1] = file to process for data
 #sys.argv[2] = number of lines to take from file
@@ -17,9 +16,7 @@ import sys
 #sys.argv[10] = # of epochs
 #sys.argv[11] = loss function
 #sys.argv[12] = optimizer
-#sys.argv[13] = pickle file for training data
-#sys.argv[14] = pickle file for testing data
-#sys.argv[15] = OPTIONAL location of .h5 file to save weights
+#sys.argv[13] = OPTIONAL location of .h5 file to save weights
 
 
 print("loading embeddings")
@@ -41,20 +38,26 @@ model = m.FF_keras(hidden_layer_dims=hidden_layer_dims, activations=hidden_layer
 
 model.buildModel()
 
+print("loading training data")
+model.training_vectors = m.unpickleData("training_instances/coca_2500-wsj-swbd.pickle")
+
 print("training")
-model.train(sys.argv[1], num_lines, lemmatize=lemmatize)
+model.train(None, None, lemmatize=lemmatize)
 
-print("pickling training data")
-m.pickleData(model.training_vectors, sys.argv[13])
+print("loading testing data")
+model.testing_vectors = m.unpickleData("training_instances/pitchTesting.pickle")
 
-# print("pickling testing data")
-# m.pickleData(model.testing_vectors, sys.argv[14])
+print("testing")
+model.test(None, None, lemmatize=lemmatize)
 
-if len(sys.argv) == 16:
+#save weights?
+if len(sys.argv) == 14:
     print("saving weights")
-    # model.saveWeights(sys.argv[12])
+    #TODO implement in FF_keras
+    # model.saveWeights(sys.argv[13])
 else:
     print("ending without saving weights")
+
 
 print("hyperparameters")
 print("number of lines", num_lines)

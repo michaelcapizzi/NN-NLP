@@ -53,14 +53,16 @@ else:
     model.test_eos_embed()
 
 print("pickling training data")
-model.pickleData(model.training_vectors, sys.argv[10])
+m.pickleData(model.training_vectors, sys.argv[10])
 
 print("pickling testing data")
-model.pickleData(model.testing_vectors, sys.argv[11])
+m.pickleData(model.testing_vectors, sys.argv[11])
 
 if len(sys.argv) == 13:
     print("saving weights")
     model.saveWeights(sys.argv[12])
+else:
+    print("ending without saving weights")
 
 print("hyperparameters")
 print("number of lines", sys.argv[2])

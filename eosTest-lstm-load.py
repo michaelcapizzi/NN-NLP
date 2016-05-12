@@ -44,11 +44,11 @@ model.prepareData(sys.argv[1], int(sys.argv[2]))
 model.buildModel()
 
 print("loading training data")
-model.training_vectors = model.unpickleData("training_instances/" + sys.argv[10])
+model.training_vectors = m.unpickleData("training_instances/" + sys.argv[10])
 print("length of training", len(model.training_vectors))
 
 print("loading testing data")
-model.testing_vectors = model.unpickleData("training_instances/" + sys.argv[11])
+model.testing_vectors = m.unpickleData("training_instances/" + sys.argv[11])
 print("length of testing", len(model.testing_vectors))
 
 print("training")

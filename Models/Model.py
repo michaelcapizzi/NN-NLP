@@ -6,7 +6,7 @@ from random import shuffle
 from collections import Counter
 import pickle
 import Utils.PreProcessing as pre
-import Utils.Evaluation as e
+import Utils.Evaluation as eval
 import Data as d
 
 
@@ -554,7 +554,7 @@ class LSTM_keras:
             if len(allResults) == 0.0 or sum(allResults) == 0.0:
                 averageAccuracy = 0
             else:
-                averageAccuracy = e.accuracy(sum(allResults), len(allResults))
+                averageAccuracy = eval.accuracy(sum(allResults), len(allResults))
             print("final accuracy", str(averageAccuracy))
 
 
@@ -581,9 +581,9 @@ class LSTM_keras:
                 finalTN = allResults.count("tn")
                 finalFP = allResults.count("fp")
                 finalFN = allResults.count("fn")
-                finalPrecision = e.precision(finalTP, finalFP)
-                finalRecall = e.recall(finalTP, finalFN)
-                finalF1 = e.f1(finalPrecision, finalRecall)
+                finalPrecision = eval.precision(finalTP, finalFP)
+                finalRecall = eval.recall(finalTP, finalFN)
+                finalF1 = eval.f1(finalPrecision, finalRecall)
                 print("final precision", finalPrecision)
                 print("final recall", finalRecall)
                 print("final f1", finalF1)
@@ -604,9 +604,9 @@ class LSTM_keras:
                 finalTN = allResults.count("tn")
                 finalFP = allResults.count("fp")
                 finalFN = allResults.count("fn")
-                finalPrecision = e.precision(finalTP, finalFP)
-                finalRecall = e.recall(finalTP, finalFN)
-                finalF1 = e.f1(finalPrecision, finalRecall)
+                finalPrecision = eval.precision(finalTP, finalFP)
+                finalRecall = eval.recall(finalTP, finalFN)
+                finalF1 = eval.f1(finalPrecision, finalRecall)
                 print("final precision", finalPrecision)
                 print("final recall", finalRecall)
                 print("final f1", finalF1)
@@ -669,7 +669,7 @@ class LSTM_keras:
                     results.append(0)
             else:
                 break
-        sentenceAccuracy = e.accuracy(results.count(1), len(results))
+        sentenceAccuracy = eval.accuracy(results.count(1), len(results))
         print("final sentence", sentence)
         print("sentence accuracy", str(sentenceAccuracy))
         return sentenceAccuracy
@@ -757,9 +757,9 @@ class LSTM_keras:
         tn = results.count("tn")
         fp = results.count("fp")
         fn = results.count("fn")
-        precision = e.precision(tp, fp)
-        recall = e.recall(tp, fn)
-        f1 = e.f1(precision, recall)
+        precision = eval.precision(tp, fp)
+        recall = eval.recall(tp, fn)
+        f1 = eval.f1(precision, recall)
         print("sentence precision", precision)
         print("sentence recall", recall)
         print("sentence f1", f1)
@@ -806,9 +806,9 @@ class LSTM_keras:
         tn = results.count("tn")
         fp = results.count("fp")
         fn = results.count("fn")
-        precision = e.precision(tp, fp)
-        recall = e.recall(tp, fn)
-        f1 = e.f1(precision, recall)
+        precision = eval.precision(tp, fp)
+        recall = eval.recall(tp, fn)
+        f1 = eval.f1(precision, recall)
         print("sentence precision", precision)
         print("sentence recall", recall)
         print("sentence f1", f1)
@@ -978,77 +978,58 @@ class FF_keras:
     #num_lines = number of lines to use from training file
         #0 = all
     def train(self, fPath, num_lines, lemmatize=True):
-        if fPath:
-            #open file
-            f = open(fPath, "rb")
-            #start the server
-            self.processor = pre.initializeProcessor()
-            #starting processors server
-            pre.startServer(self.processor)
-            for e in range(self.num_epochs):
-                #if file text must be processed
-                    #only relevant for first epoch
-                if not self.training_vectors and e == 0:
-                    #initialize vector to house training and testing instances
-                    self.training_vectors = []
-                    #counter to keep track of the number of lines to process
-                    c = 0
-                    #iterate through each line
-                    for line in f:
-                        if c <= num_lines or num_lines == 0:
-                            #set counter for total number of lines
-                            c+=1
-                            #process line
-                            tokensLabels = pre.convertLineForEOS(line, self.processor, lemmatize)
-                            #unpack tokens and labels
-                            tokens, labels = zip(*tokensLabels)
-                            #convert tokens to vector representation
-                            tokensVector = pre.convertSentenceToVec(tokens, self.embeddingClass, self.w2vDimension)
-                            tokensVectorLabels = zip(tokensVector, labels)
-                            [self.training_vectors.append(t) for t in tokensVectorLabels]
-                    f.close()
-                    print("stopping server")
-                    self.processor.__del__()
-                #split vectors and labels
-                train_v, train_l = zip(*self.training_vectors)
-                #convert to lists
-                train_vectors = list(train_v)
-                train_labels = list(train_l)
-                for i in range(len(train_vectors)):
-                    slice_ = self.getSlice(train_vectors, i)
-                    #generate label in proper dimensions
-                    if train_labels[i] == 0:
-                        label = np.array([[0,1]])
-                    else:
-                        label = np.array([[1,0]])
-                    if i % 1000 == 0 or i == 0:
-                        print("epoch", str(e + 1))
-                        print("training instance %s of %s" %(str(i+1), str(len(self.training_vectors))))
-                    self.model.train_on_batch(slice_.reshape(1,slice_.shape[0]), label)
-        else:
+        for e in range(self.num_epochs):
+            #if file text must be processed
+            #only relevant for first epoch
+            if fPath and e == 0:
+                #open file
+                f = open(fPath, "rb")
+                #start the server
+                self.processor = pre.initializeProcessor()
+                #starting processors server
+                pre.startServer(self.processor)
+                #initialize vector to house training and testing instances
+                self.training_vectors = []
+                #counter to keep track of the number of lines to process
+                c = 0
+                #iterate through each line
+                for line in f:
+                    if c <= num_lines or num_lines == 0:
+                        #set counter for total number of lines
+                        c+=1
+                        #process line
+                        tokensLabels = pre.convertLineForEOS(line, self.processor, lemmatize)
+                        #unpack tokens and labels
+                        tokens, labels = zip(*tokensLabels)
+                        #convert tokens to vector representation
+                        tokensVector = pre.convertSentenceToVec(tokens, self.embeddingClass, self.w2vDimension)
+                        tokensVectorLabels = zip(tokensVector, labels)
+                        [self.training_vectors.append(t) for t in tokensVectorLabels]
+                f.close()
+                print("stopping server")
+                self.processor.__del__()
             #split vectors and labels
             train_v, train_l = zip(*self.training_vectors)
             #convert to lists
             train_vectors = list(train_v)
             train_labels = list(train_l)
-            for e in range(self.num_epochs):
-                for i in range(len(train_vectors)):
-                    slice_ = self.getSlice(train_vectors, i)
-                    #generate label in proper dimensions
-                    if train_labels[i] == 0:
-                        label = np.array([[0,1]])
-                    else:
-                        label = np.array([[1,0]])
-                    if i % 1000 == 0 or i == 0:
-                        print("epoch", str(e + 1))
-                        print("training instance %s of %s" %(str(i+1), str(len(self.training_vectors))))
-                        print("label", label)
-                    self.model.train_on_batch(slice_.reshape(1,slice_.shape[0]), label)
+            for i in range(len(train_vectors)):
+                slice_ = self.getSlice(train_vectors, i)
+                #generate label in proper dimensions
+                if train_labels[i] == 0:
+                    label = np.array([[0,1]])
+                else:
+                    label = np.array([[1,0]])
+                if i % 1000 == 0 or i == 0:
+                    print("epoch", str(e + 1))
+                    print("training instance %s of %s" %(str(i+1), str(len(self.training_vectors))))
+                self.model.train_on_batch(slice_.reshape(1,slice_.shape[0]), label)
 
 #################################################
 
     #test a trained model on test data file to be loaded
     def test(self, fPath, num_lines, lemmatize=True):
+        results = []
         if fPath:
             #open file
             f = open(fPath, "rb")
@@ -1076,8 +1057,46 @@ class FF_keras:
             f.close()
             print("stopping server")
             self.processor.__del__()
-        else:
-            print("not yet implemented")
+        #split vectors and labels
+        test_v, test_l = zip(*self.testing_vectors)
+        #convert to lists
+        test_vectors = list(test_v)
+        test_labels = list(test_l)
+        for i in range(len(test_vectors)):
+            slice_ = self.getSlice(test_vectors, i)
+            #generate label in proper dimensions
+            if test_labels[i] == 0:
+                actual = np.array([[0,1]])
+            else:
+                actual = np.array([[1,0]])
+            distribution = self.model.predict_on_batch(slice_.reshape(1,slice_.shape[0]))
+            distArgMax = np.argmax(distribution)
+            if distArgMax == 0:
+                predicted = 1
+            else:
+                predicted = 0
+            if actual == 0 and predicted == 1:
+                results.append("fp")
+            elif actual == 1 and predicted == 0:
+                results.append("fn")
+            elif actual == 1 and predicted == 1:
+                results.append("tp")
+            if i % 500 == 0 or i == 0:
+                precision = eval.precision(results.count("tp"), results.count("fp"))
+                recall = eval.recall(results.count("tp"), results.count("fn"))
+                print("testing instance %s of %s" %(str(i+1), str(len(self.testing_vectors))))
+                print("predicted distribution", distribution)
+                print("predicted label", predicted)
+                print("actual label", actual)
+                print("current precision", precision)
+                print("current recall", recall)
+                print("current f1", precision, recall)
+        finalPrecision = eval.precision(results.count("tp"), results.count("fp"))
+        finalRecall = eval.recall(results.count("tp"), results.count("fn"))
+        finalF1 = eval.f1(finalPrecision, finalRecall)
+        print("final precision", finalPrecision)
+        print("final recall", finalRecall)
+        print("final f1", finalF1)
 
 
 
