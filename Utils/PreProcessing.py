@@ -186,10 +186,11 @@ def convertLineForEOS(line, processor, lemmatize=False):
     punctRegex = r'[^\w\']'
 
     #regex for numbers
-    numberRegex = r'\d+'
+    # numberRegex = r'\d+'
 
     #replace numbers
-    clean = re.sub(numberRegex, "number", line.rstrip())
+    # clean = re.sub(numberRegex, "number", line.rstrip())
+    clean = line.rstrip()
 
     #annotate
     annotated = annotate(processor, clean)

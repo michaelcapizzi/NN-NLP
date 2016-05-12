@@ -994,7 +994,7 @@ class FF_keras:
                         c+=1
                         #process line
                         tokensLabels = pre.convertLineForEOS(line, self.processor, lemmatize)
-                        print(len(tokensLabels), line)
+                        print(line.rstrip(), len(tokensLabels))
                         #unpack tokens and labels
                         tokens, labels = zip(*tokensLabels)
                         #convert tokens to vector representation
