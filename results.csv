@@ -6,3 +6,4 @@ cocaForLM.txt,5000,Gigaword,30,1,200,10,binary_crossentropy,adagrad,.5,.2,.29
 cocaForLM.txt,5000,Gigaword,30,3,200,5,categorical_crossentropy,adagrad,0,0,0
 cocForLM.txt,5000,Gigaword,30,1,100,10,categorical_crossentropy,adagrad,.14,.1,.12
 cocaForLM.txt,5000,Goldberg,30,1,200,10,categorical_crossentropy,adagrad,0,0,0
+cocaForLM.txt,5000,Gigaword,30,1,300,10,categorical_crossentropy,adagrad,0,0,0

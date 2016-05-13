@@ -989,7 +989,7 @@ class FF_keras:
                 c = 0
                 #iterate through each line
                 for line in f:
-                    if c <= num_lines or num_lines == 0:
+                    if c <= num_lines or num_lines == 0 and len(line.split(" ")) > 1:
                         #set counter for total number of lines
                         c+=1
                         #process line
