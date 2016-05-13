@@ -8,6 +8,8 @@ import pickle
 import Utils.PreProcessing as pre
 import Utils.Evaluation as eval
 import Data as d
+import time
+import processors as proc
 
 
 
@@ -989,7 +991,20 @@ class FF_keras:
                 c = 0
                 #iterate through each line
                 for line in f:
-                    if c <= num_lines or num_lines == 0 and len(line.split(" ")) > 1:
+                    if c > 0 and c % 5000 == 0:
+                        print("\n")
+                        print("\n")
+                        print("stopping server")
+                        self.processor.stop_server()
+                        time.sleep(45)
+                        print("starting up server")
+                        #start the server
+                        # self.processor = pre.initializeProcessor()
+                        #starting processors server
+                        pre.startServer(self.processor)
+                        print("\n")
+                        print("\n")
+                    if (c <= num_lines or num_lines == 0) and len(line.split(" ")) > 1:
                         #set counter for total number of lines
                         c+=1
                         #process line
@@ -1003,7 +1018,7 @@ class FF_keras:
                         [self.training_vectors.append(t) for t in tokensVectorLabels]
                 f.close()
                 print("stopping server")
-                self.processor.__del__()
+                self.processor.stop_server()
             #split vectors and labels
             train_v, train_l = zip(*self.training_vectors)
             #convert to lists
