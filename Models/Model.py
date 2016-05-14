@@ -13,6 +13,11 @@ import processors as proc
 
 
 
+#
+# from keras.callbacks import EarlyStopping
+# early_stopping = EarlyStopping(monitor='val_loss', patience=2)
+# model.fit(X, y, validation_split=0.2, callbacks=[early_stopping])
+
 
 
 #pickles a given vector to a given location
@@ -866,7 +871,6 @@ class FF_keras:
                  b_constraint=None,
                  loss_regularizer=None,
                  bias=True,
-                 w2v_dropout=0,
                  hidden_dropouts=[0],
                  loss_function="binary_crossentropy",
                  optimizer="adagrad",
@@ -883,7 +887,6 @@ class FF_keras:
         self.b_constraint=b_constraint
         self.loss_regularizer=loss_regularizer
         self.bias=bias
-        self.w2v_dropout=w2v_dropout
         self.hidden_dropouts=hidden_dropouts
         self.loss_function=loss_function
         self.optimizer=optimizer
@@ -904,11 +907,6 @@ class FF_keras:
             if not len(self.hidden_layer_dims) == len(self.activations) == len(self.hidden_dropouts):
                 raise Exception
             else:
-                #add initial dropout layer
-                self.model.add(Dropout(
-                        p=self.w2v_dropout,
-                        input_shape=(self.w2vDimension * self.window_size * 2,)
-                ))
                 #for each layer
                     #i = number of nodes in hidden layer
                     #j = activation of hidden layer
@@ -922,7 +920,7 @@ class FF_keras:
                         #add dense
                         self.model.add(Dense(
                             output_dim=i,
-                            init="uniform"
+                            init="lecun_uniform"
                         ))
                         #add dropout
                         self.model.add(Dropout(
@@ -937,7 +935,7 @@ class FF_keras:
                         #add dense
                         self.model.add(Dense(
                             output_dim=i,
-                            init="uniform"
+                            init="lecun_uniform"
                         ))
                         #add dropout
                         self.model.add(Dropout(
@@ -996,15 +994,15 @@ class FF_keras:
                         print("\n")
                         print("stopping server")
                         self.processor.stop_server()
-                        time.sleep(45)
-                        print("starting up server")
-                        #start the server
-                        # self.processor = pre.initializeProcessor()
-                        #starting processors server
+                        time.sleep(15)
+                        print("deleting server")
+                        self.processor.__del__()
+                        print("restarting server")
+                        self.processor = pre.initializeProcessor()
                         pre.startServer(self.processor)
                         print("\n")
                         print("\n")
-                    if (c <= num_lines or num_lines == 0) and len(line.split(" ")) > 1:
+                    if (c <= num_lines or num_lines == 0) and len(line.split(" ")) > 1 and "@" not in line:
                         #set counter for total number of lines
                         c+=1
                         #process line
