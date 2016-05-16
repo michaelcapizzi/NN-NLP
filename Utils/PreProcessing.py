@@ -188,9 +188,17 @@ def convertLineForEOS(line, processor, lemmatize=False):
     #regex for numbers
     # numberRegex = r'\d+'
 
+    #particularly an issue in COCA
+    dashRegex = r'--'
+
+    #particularly an issue in COCA
+        # "English" at the end of a line
+    englishRegex = r'. English \n'
+
     #replace numbers
-    # clean = re.sub(numberRegex, "number", line.rstrip())
-    clean = line.rstrip()
+    # clean1 = re.sub(numberRegex, "number", line.rstrip())
+    clean1 = re.sub(dashRegex, "", line.rstrip())
+    clean = re.sub(englishRegex, "", clean1)
 
     #annotate
     annotated = annotate(processor, clean)

@@ -989,31 +989,34 @@ class FF_keras:
                 c = 0
                 #iterate through each line
                 for line in f:
-                    if c > 0 and c % 5000 == 0:
-                        print("\n")
-                        print("\n")
-                        print("stopping server")
-                        self.processor.stop_server()
-                        time.sleep(15)
-                        print("deleting server")
-                        self.processor.__del__()
-                        print("restarting server")
-                        self.processor = pre.initializeProcessor()
-                        pre.startServer(self.processor)
-                        print("\n")
-                        print("\n")
-                    if (c <= num_lines or num_lines == 0) and len(line.split(" ")) > 1 and "@" not in line:
+                    # if c > 0 and c % 100 == 0:
+                    #     print("\n")
+                    #     print("\n")
+                    #     print("stopping server")
+                    #     self.processor.stop_server()
+                    #     time.sleep(15)
+                    #     print("deleting server")
+                    #     self.processor.__del__()
+                    #     print("restarting server")
+                    #     self.processor = pre.initializeProcessor()
+                    #     pre.startServer(self.processor)
+                    #     print("\n")
+                    #     print("\n")
+                    if (c <= num_lines or num_lines == 0) and len(line.split(" ")) > 1 and "@" not in line and "#" not in line:
                         #set counter for total number of lines
                         c+=1
-                        #process line
-                        tokensLabels = pre.convertLineForEOS(line, self.processor, lemmatize)
-                        print(line.rstrip(), len(tokensLabels))
-                        #unpack tokens and labels
-                        tokens, labels = zip(*tokensLabels)
-                        #convert tokens to vector representation
-                        tokensVector = pre.convertSentenceToVec(tokens, self.embeddingClass, self.w2vDimension)
-                        tokensVectorLabels = zip(tokensVector, labels)
-                        [self.training_vectors.append(t) for t in tokensVectorLabels]
+                        try:
+                            tokensLabels = pre.convertLineForEOS(line, self.processor, lemmatize)
+                            print(line.rstrip(), c)
+                            #process line
+                            #unpack tokens and labels
+                            tokens, labels = zip(*tokensLabels)
+                            #convert tokens to vector representation
+                            tokensVector = pre.convertSentenceToVec(tokens, self.embeddingClass, self.w2vDimension)
+                            tokensVectorLabels = zip(tokensVector, labels)
+                            [self.training_vectors.append(t) for t in tokensVectorLabels]
+                        except Exception as ex:
+                            print("ERROR in annotating.  Skipping line.")
                 f.close()
                 print("stopping server")
                 self.processor.stop_server()
