@@ -903,68 +903,79 @@ class FF_keras:
 
 
     def buildModel(self):
-        try:
-            if not len(self.hidden_layer_dims) == len(self.activations) == len(self.hidden_dropouts):
-                raise Exception
-            else:
-                #for each layer
-                    #i = number of nodes in hidden layer
-                    #j = activation of hidden layer
-                    #k = dropout for hidden layer
-                #counter for layers
-                c = 0
-                for i,j,k in zip(self.hidden_layer_dims,self.activations, self.hidden_dropouts):
-                    c+=1
-                    #for last layer
-                    if c == len(self.hidden_layer_dims):
-                        #add dense
-                        self.model.add(Dense(
-                            output_dim=i,
-                            init="lecun_uniform"
-                        ))
-                        #add dropout
-                        self.model.add(Dropout(
-                            p=k
-                        ))
-                        #add activation
-                        self.model.add(Activation(
-                            activation=j
-                        ))
-                    #for middle layers
-                    else:
-                        #add dense
-                        self.model.add(Dense(
-                            output_dim=i,
-                            init="lecun_uniform"
-                        ))
-                        #add dropout
-                        self.model.add(Dropout(
-                                p=k
-                        ))
-                        #add activation
-                        self.model.add(Activation(
-                            activation=j
-                        ))
-
-                #add final softmax layer
+        #for each layer
+            #i = number of nodes in hidden layer
+            #j = activation of hidden layer
+            #k = dropout for hidden layer
+        #counter for layers
+        c = 0
+        for i,j,k in zip(self.hidden_layer_dims,self.activations, self.hidden_dropouts):
+            c+=1
+            #for first layer
+            if c == 1:
+                #add dense with input_shape
                 self.model.add(Dense(
-                    output_dim=2
+                    output_dim=i,
+                    init="lecun_uniform",
+                    batch_input_shape=(1,self.w2vDimension)
                 ))
+                #add dropout
+                self.model.add(Dropout(
+                    p=k
+                ))
+                #add activation
                 self.model.add(Activation(
-                        activation="softmax"
+                        activation=j
+                ))
+            #for last layer
+            # elif c == len(self.hidden_layer_dims):
+            #     #add dense
+            #     self.model.add(Dense(
+            #         output_dim=i,
+            #         init="lecun_uniform"
+            #     ))
+            #     #add dropout
+            #     self.model.add(Dropout(
+            #         p=k
+            #     ))
+            #     #add activation
+            #     self.model.add(Activation(
+            #         activation=j
+            #     ))
+            #for middle layers
+            else:
+                #add dense
+                self.model.add(Dense(
+                    output_dim=i,
+                    init="lecun_uniform"
+                ))
+                #add dropout
+                self.model.add(Dropout(
+                        p=k
+                ))
+                #add activation
+                self.model.add(Activation(
+                    activation=j
                 ))
 
-                #compile
-                self.model.compile(
-                        optimizer=self.optimizer,
-                        loss=self.loss_function,
-                        metrics=["accuracy"]
-                )
+        #add final softmax layer
+        self.model.add(Dense(
+            output_dim=2
+        ))
+        self.model.add(Activation(
+                activation="softmax"
+        ))
 
-                #print model summary
-                self.model.summary()
-        except Exception as e:
-            print("ERROR: Arguments for hidden layers do not match.  \nlength of hidden_layer_dims=%s \nlength of activations=%s  \nlength of hidden_dropouts=%s" %(str(len(self.hidden_layer_dims)), str(len(self.activations)), str(len(self.hidden_dropouts))))
+        #compile
+        self.model.compile(
+                optimizer=self.optimizer,
+                loss=self.loss_function,
+                metrics=["accuracy"]
+        )
+
+        #print model summary
+        self.model.summary()
+
 
 
 #################################################
@@ -989,19 +1000,6 @@ class FF_keras:
                 c = 0
                 #iterate through each line
                 for line in f:
-                    # if c > 0 and c % 100 == 0:
-                    #     print("\n")
-                    #     print("\n")
-                    #     print("stopping server")
-                    #     self.processor.stop_server()
-                    #     time.sleep(15)
-                    #     print("deleting server")
-                    #     self.processor.__del__()
-                    #     print("restarting server")
-                    #     self.processor = pre.initializeProcessor()
-                    #     pre.startServer(self.processor)
-                    #     print("\n")
-                    #     print("\n")
                     if (c <= num_lines or num_lines == 0) and len(line.split(" ")) > 1 and "@" not in line and "#" not in line:
                         #set counter for total number of lines
                         c+=1
@@ -1069,7 +1067,7 @@ class FF_keras:
                     [self.testing_vectors.append(t) for t in tokensVectorLabels]
             f.close()
             print("stopping server")
-            self.processor.__del__()
+            self.processor.stop_server()
         #split vectors and labels
         test_v, test_l = zip(*self.testing_vectors)
         #convert to lists
