@@ -79,6 +79,7 @@ for line in f:
     if c <= num_lines or num_lines == 0:
         #set counter for total number of lines
         c+=1
+        print(line.rstrip(), c)
         #process line
         tokensLabels = pre.convertLineForEOS(line, processor, lemmatize)
         #unpack tokens and labels
