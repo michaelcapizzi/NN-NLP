@@ -44,14 +44,12 @@ train_1 = pickle.load(training_vector_path_1)
 train_2 = pickle.load(training_vector_path_2)
 model.training_vectors = train_1 + train_2
 
-print(model.training_vectors)
 
 # model.training_vectors = m.unpickleData("training_instances/coca_2500-wsj-swbd.pickle")
 
 print("loading testing data")
 model.testing_vectors = pickle.load(testing_vector_path)
 
-print(model.testing_vectors)
 # model.testing_vectors = m.unpickleData("training_instances/pitchTesting.pickle")
 
 

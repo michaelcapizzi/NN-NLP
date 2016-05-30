@@ -917,7 +917,7 @@ class FF_keras:
                 self.model.add(Dense(
                     output_dim=i,
                     init="lecun_uniform",
-                    batch_input_shape=(1,self.w2vDimension)
+                    batch_input_shape=(1,self.w2vDimension*2*self.window_size)
                 ))
                 #add dropout
                 self.model.add(Dropout(
@@ -1130,7 +1130,7 @@ class FF_keras:
             for d in range(diff):
                 slice_.insert(0, np.zeros(self.w2vDimension))
         else:
-            slice_ = pre.padEmbeddingToConstant(list[j:k], self.w2vDimension, 6)
+            slice_ = pre.padEmbeddingToConstant(list[j:k], self.w2vDimension, self.window_size * 2)
 
         return np.concatenate(slice_)
 
