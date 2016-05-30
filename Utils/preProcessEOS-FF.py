@@ -55,10 +55,18 @@ for line in f:
             print("ERROR in annotating.  Skipping line.")
 f.close()
 
-print("pickling training data")
-fTrain = open(pickleTrain, "wb")
-pickle.dump(training_vectors, fTrain)
-fTrain.close()
+print("separating training data in half")
+l = len(training_vectors)
+train_1 = training_vectors[0:l/2]
+train_2 = training_vectors[l/2:l+1]
+
+print("pickling training data into two parts")
+fTrain1 = open("01-" + pickleTrain, "wb")
+pickle.dump(train_1, fTrain1)
+fTrain1.close()
+fTrain2 = open("02-" + pickleTrain, "wb")
+pickle.dump(train_2, fTrain2)
+fTrain2.close()
 
 print("processing testing")
 testing_vectors = []
