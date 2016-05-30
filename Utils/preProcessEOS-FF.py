@@ -5,7 +5,7 @@ import pickle
 
 #script to solely convert EOS plain text data to vector representations to be used in FF models
 
-#sys.argv[1] = path to training file
+#sys.argv[1] = path to training file (from training_instances)
 #sys.argv[2] = path to testing file
 #sys.argv[3] = W2V vectors to use
 #sys.argv[4] = number of lines to process
@@ -61,10 +61,10 @@ train_1 = training_vectors[0:l/2]
 train_2 = training_vectors[l/2:l+1]
 
 print("pickling training data into two parts")
-fTrain1 = open("01-" + pickleTrain, "wb")
+fTrain1 = open("training_instances/01-" + pickleTrain, "wb")
 pickle.dump(train_1, fTrain1)
 fTrain1.close()
-fTrain2 = open("02-" + pickleTrain, "wb")
+fTrain2 = open("training_instances/02-" + pickleTrain, "wb")
 pickle.dump(train_2, fTrain2)
 fTrain2.close()
 
