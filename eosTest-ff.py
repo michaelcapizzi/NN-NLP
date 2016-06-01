@@ -5,8 +5,8 @@ import pickle
 
 #script for running feed forward neural net over same training and testing data as used in original segmentor
 
-#sys.argv[1] = training data to load
-#sys.argv[2] = testing data to load
+#sys.argv[1] = training data to load (from training_instances)
+#sys.argv[2] = testing data to load (must include training_instances)
 #sys.argv[3] = word2vec file (w2v_Gigaword.txt.gz, w2v_Goldberg.txt.gz)
 #sys.argv[4] = lemmatize, boolean
 #sys.argv[5] = hidden layer dimensions, *e.g.* '100 200 300'

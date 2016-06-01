@@ -5,8 +5,8 @@ import pickle
 
 #script to solely convert EOS plain text data to vector representations to be used in FF models
 
-#sys.argv[1] = path to training file (from training_instances)
-#sys.argv[2] = path to testing file (must include training_instances)
+#sys.argv[1] = path to training file
+#sys.argv[2] = path to testing file
 #sys.argv[3] = W2V vectors to use
 #sys.argv[4] = number of lines to process
 #sys.argv[5] = lemmatize? (boolean)
