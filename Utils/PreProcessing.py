@@ -91,11 +91,15 @@ def padOneHotToConstant(sentence, maxLength):
 
 
 #get word vector
+#converts "I" to "i" if necessary
 def getVector(word, gensimModel, w2vDim):
     if word in gensimModel:
         return gensimModel[word]
     else:
-        return np.zeros(w2vDim)
+        if word == "I":
+            return gensimModel["i"]
+        else:
+            return np.zeros(w2vDim)
 
 
 #convert a list of words to list of word embeddings

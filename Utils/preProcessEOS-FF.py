@@ -5,6 +5,9 @@ import pickle
 
 #script to solely convert EOS plain text data to vector representations to be used in FF models
 
+# python Utils/preProcessEOS-FF.py training_instances/segmenter_train.master training_instances/segmenter_test.master w2v_Gigaword.txt.gz 0 lemmatize segmenter_train.pickle segmenter_test.pickle
+
+
 #sys.argv[1] = path to training file
 #sys.argv[2] = path to testing file
 #sys.argv[3] = W2V vectors to use
