@@ -7,7 +7,8 @@ import numpy as np
 
 # python Utils/preProcessEOS-FF.py training_instances/segmenter_train.master training_instances/segmenter_test.master w2v_Goldberg.txt.gz 10 lemmatize training_instances/segmenter_train.csv training_instances/segmenter_test.csv
 
-
+#to load
+#np.loadtxt(f, delimiter=",", newline="\n")
 
 #sys.argv[1] = path to training file
 #sys.argv[2] = path to testing file
