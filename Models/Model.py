@@ -1025,7 +1025,10 @@ class FF_keras:
     #file = file to use for training
     #num_lines = number of lines to use from training file
         #0 = all
-    def train(self, fPath, num_lines, lemmatize=True):
+    #negative sampling rate - double representing percentage of negative examples to *ignore*
+    def train(self, fPath, num_lines, lemmatize=True, neg_sample):
+        #negative sample threshold
+        neg_cutoff = float(1000 * neg_sample)
         for e in range(self.num_epochs):
             #if file text must be processed
             #only relevant for first epoch
@@ -1066,7 +1069,13 @@ class FF_keras:
                 if i % 1000 == 0 or i == 0:
                     print("epoch", str(e + 1))
                     print("training instance %s of %s" %(str(i+1), str(len(self.training_vectors))))
-                self.model.train_on_batch(slice_.reshape(1,slice_.shape[0]), label)
+                rand = np.random.randint(0,1000)
+                #implement random negative resampling
+                if np.argmax(label) == 0 or (np.argmax(label) == 1 and rand > neg_cutoff):
+                    print("keeping")
+                    self.model.train_on_batch(slice_.reshape(1,slice_.shape[0]), label)
+                else:
+                    print("ignoring")
 
 #################################################
 
