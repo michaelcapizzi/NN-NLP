@@ -36,7 +36,7 @@ window_size = int(sys.argv[8])
 num_epochs = int(sys.argv[9])
 loss_function = sys.argv[10]
 optimizer = sys.argv[11]
-if len(sys.argv) == 12:
+if len(sys.argv) == 13:
     weights_location = sys.argv[12]
 
 w2vDimension = 200  #if Gigaword
@@ -47,34 +47,42 @@ model = m.FF_keras(hidden_layer_dims=hidden_layer_dims, activations=hidden_layer
 
 model.buildModel()
 
+print("loading data")
+model.loadData(training_vectors, training_labels, testing_vectors, testing_labels)
+
+print(model.training_vectors)
+print("\n")
+print("\n")
+print(model.training_labels)
 
 
 
 
-print("training")
-model.train(None, None, lemmatize=lemmatize)
 
-print("testing")
-model.test(None, None, lemmatize=lemmatize)
-
-#save weights?
-if len(sys.argv) == 14:
-    print("saving weights")
-    #TODO implement in FF_keras
-    # model.saveWeights(sys.argv[13])
-else:
-    print("ending without saving weights")
-
-
-print("hyperparameters")
-print("word2vec", w2vUsed)
-print("lemmatize", str(lemmatize))
-print("number of layers", len(hidden_layer_dims))
-print("hidden layer dims", hidden_layer_dims)
-print("hidden layer activations", hidden_layer_activations)
-print("hidden layer dropouts", hidden_layer_dropouts)
-print("window_size", window_size)
-print("number of epochs", num_epochs)
-print("loss function", loss_function)
-print("optimizer", optimizer)
+# print("training")
+# model.trainFromCSV(tr_vec=training_vectors, tr_lab=training_labels)
+#
+# print("testing")
+# model.test(None, None, lemmatize=lemmatize)
+#
+# #save weights?
+# if len(sys.argv) == 14:
+#     print("saving weights")
+#     #TODO implement in FF_keras
+#     # model.saveWeights(sys.argv[13])
+# else:
+#     print("ending without saving weights")
+#
+#
+# print("hyperparameters")
+# print("word2vec", w2vUsed)
+# print("lemmatize", str(lemmatize))
+# print("number of layers", len(hidden_layer_dims))
+# print("hidden layer dims", hidden_layer_dims)
+# print("hidden layer activations", hidden_layer_activations)
+# print("hidden layer dropouts", hidden_layer_dropouts)
+# print("window_size", window_size)
+# print("number of epochs", num_epochs)
+# print("loss function", loss_function)
+# print("optimizer", optimizer)
 

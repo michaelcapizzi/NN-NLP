@@ -8,8 +8,9 @@ import pickle
 import Utils.PreProcessing as pre
 import Utils.Evaluation as eval
 import Data as d
-import time
-import processors as proc
+from itertools import izip
+
+
 
 
 
@@ -894,8 +895,10 @@ class FF_keras:
         self.model = Sequential()
         self.data=None
         self.processor=None
-        self.training_vectors=None
-        self.testing_vectors=None
+        self.training_vectors=[]
+        self.training_labels=[]
+        self.testing_vectors=[]
+        self.testing_labels=[]
 
 
 
@@ -979,6 +982,34 @@ class FF_keras:
 
 
 #################################################
+
+    #load data
+    def loadData(self, tr_vec, tr_lab, te_vec, te_lab):
+        #line counter
+        c = 0
+        for v,l in izip(tr_vec, tr_lab):
+            c+=1
+            vector = np.fromstring(v, sep=",")
+            label = np.fromstring(l, sep=",")
+            if c % 1000 == 0:
+                print("importing data point number %s" %str(c))
+            self.training_vectors.append(vector)
+            self.training_labels.append(label)
+        tr_vec.close()
+        tr_lab.close()
+
+        c = 0
+        for v,l in izip(te_vec, te_lab):
+            c+=1
+            vector = np.fromstring(v, sep=",")
+            label = np.fromstring(l, sep=",")
+            if c % 1000 == 0:
+                print("importing data point number %s" %str(c))
+            self.testing_vectors.append(vector)
+            self.testing_labels.append(label)
+        te_vec.close()
+        te_lab.close()
+
 
     #file = file to use for training
     #num_lines = number of lines to use from training file
