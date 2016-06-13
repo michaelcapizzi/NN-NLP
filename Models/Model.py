@@ -1125,7 +1125,7 @@ class FF_keras:
                 results.append("fn")
             elif np.argmax(actual) == 1 and predicted == 1:
                 results.append("tp")
-            if i % 500 == 0 or i == 0:
+            if i % 5000 == 0 or i == 0:
                 precision = eval.precision(results.count("tp"), results.count("fp"))
                 recall = eval.recall(results.count("tp"), results.count("fn"))
                 print("testing instance %s of %s" %(str(i+1), str(len(self.testing_vectors))))
