@@ -50,17 +50,9 @@ model.buildModel()
 print("loading data")
 model.loadData(training_vectors, training_labels, testing_vectors, testing_labels)
 
-print(model.training_vectors)
-print("\n")
-print("\n")
-print(model.training_labels)
+print("training")
+model.train(None, 0)
 
-
-
-
-
-# print("training")
-# model.trainFromCSV(tr_vec=training_vectors, tr_lab=training_labels)
 #
 # print("testing")
 # model.test(None, None, lemmatize=lemmatize)

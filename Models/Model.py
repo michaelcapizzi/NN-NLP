@@ -1050,20 +1050,23 @@ class FF_keras:
                 print("stopping server")
                 self.processor.stop_server()
             #split vectors and labels
-            train_v, train_l = zip(*self.training_vectors)
+            #train_v, train_l = zip(*self.training_vectors)
             #convert to lists
-            train_vectors = list(train_v)
-            train_labels = list(train_l)
+            train_vectors = self.training_vectors
+            train_labels = self.training_labels
             for i in range(len(train_vectors)):
                 slice_ = self.getSlice(train_vectors, i)
                 #generate label in proper dimensions
-                if train_labels[i] == 0:
-                    label = np.array([[0,1]])
-                else:
-                    label = np.array([[1,0]])
-                if i % 1000 == 0 or i == 0:
+                # if train_labels[i] == 0:
+                #     label = np.array([[0,1]])
+                # else:
+                #     label = np.array([[1,0]])
+                label = train_labels[i].reshape((1,2))
+                if i % 5 == 0 or i == 0:
                     print("epoch", str(e + 1))
                     print("training instance %s of %s" %(str(i+1), str(len(self.training_vectors))))
+                    print(slice_.shape)
+                    print(label.shape)
                 self.model.train_on_batch(slice_.reshape(1,slice_.shape[0]), label)
 
 #################################################
