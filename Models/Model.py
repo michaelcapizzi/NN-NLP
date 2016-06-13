@@ -1001,7 +1001,7 @@ class FF_keras:
                 vector = np.fromstring(v, sep=",")
                 label = np.fromstring(l, sep=",")
                 if c % 30000 == 0:
-                    print("importing data point number %s" %str(c))
+                    print("importing training data point number %s" %str(c))
                 self.training_vectors.append(vector)
                 self.training_labels.append(label)
             else:
@@ -1015,7 +1015,7 @@ class FF_keras:
             vector = np.fromstring(v, sep=",")
             label = np.fromstring(l, sep=",")
             if c % 5000 == 0:
-                print("importing data point number %s" %str(c))
+                print("importing testing data point number %s" %str(c))
             self.testing_vectors.append(vector)
             self.testing_labels.append(label)
         te_vec.close()
@@ -1032,6 +1032,10 @@ class FF_keras:
         for e in range(self.num_epochs):
             #ignored negative datapoints
             neg_ignored = 0
+            #pos examples
+            pos = 0
+            #neg examples
+            neg = 0
             #if file text must be processed
             #only relevant for first epoch
             if fPath and e == 0:
@@ -1065,6 +1069,7 @@ class FF_keras:
                 f.close()
                 print("stopping server")
                 self.processor.stop_server()
+            #if not preprocessing
             for i in range(len(self.training_vectors)):
                 slice_ = self.getSlice(self.training_vectors, i)
                 label = self.training_labels[i].reshape((1,2))
@@ -1075,9 +1080,16 @@ class FF_keras:
                 #implement random negative resampling
                 if np.argmax(label) == 0 or (np.argmax(label) == 1 and rand > neg_cutoff):
                     self.model.train_on_batch(slice_.reshape(1,slice_.shape[0]), label)
+                    #bookkeeping
+                    if np.argmax(label) == 0:
+                        pos+=1
+                    else:
+                        neg+=1
                 else:
                     neg_ignored+=1
             print("number of ignored negative examples in epoch %s: %s" %(str(e + 1), str(neg_ignored)))
+            print("positive examples in epoch %s: %s" %(str(e + 1), str(pos)))
+            print("negative examples in epoch %s: %s" %(str(e + 1), str(neg)))
 
 
 #################################################
