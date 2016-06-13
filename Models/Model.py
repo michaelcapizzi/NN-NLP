@@ -991,7 +991,7 @@ class FF_keras:
             c+=1
             vector = np.fromstring(v, sep=",")
             label = np.fromstring(l, sep=",")
-            if c % 1000 == 0:
+            if c % 10000 == 0:
                 print("importing data point number %s" %str(c))
             self.training_vectors.append(vector)
             self.training_labels.append(label)
@@ -1049,24 +1049,12 @@ class FF_keras:
                 f.close()
                 print("stopping server")
                 self.processor.stop_server()
-            #split vectors and labels
-            #train_v, train_l = zip(*self.training_vectors)
-            #convert to lists
-            train_vectors = self.training_vectors
-            train_labels = self.training_labels
-            for i in range(len(train_vectors)):
-                slice_ = self.getSlice(train_vectors, i)
-                #generate label in proper dimensions
-                # if train_labels[i] == 0:
-                #     label = np.array([[0,1]])
-                # else:
-                #     label = np.array([[1,0]])
-                label = train_labels[i].reshape((1,2))
-                if i % 5 == 0 or i == 0:
+            for i in range(len(self.training_vectors)):
+                slice_ = self.getSlice(self.training_vectors, i)
+                label = self.training_labels[i].reshape((1,2))
+                if i % 1000 == 0 or i == 0:
                     print("epoch", str(e + 1))
                     print("training instance %s of %s" %(str(i+1), str(len(self.training_vectors))))
-                    print(slice_.shape)
-                    print(label.shape)
                 self.model.train_on_batch(slice_.reshape(1,slice_.shape[0]), label)
 
 #################################################
@@ -1102,18 +1090,9 @@ class FF_keras:
             f.close()
             print("stopping server")
             self.processor.stop_server()
-        #split vectors and labels
-        test_v, test_l = zip(*self.testing_vectors)
-        #convert to lists
-        test_vectors = list(test_v)
-        test_labels = list(test_l)
-        for i in range(len(test_vectors)):
-            slice_ = self.getSlice(test_vectors, i)
-            #generate label in proper dimensions
-            if test_labels[i] == 0:
-                actual = np.array([[0,1]])
-            else:
-                actual = np.array([[1,0]])
+        for i in range(len(self.testing_vectors)):
+            actual = self.testing_labels[i].reshape((1,2))
+            slice_ = self.getSlice(self.testing_vectors, i)
             distribution = self.model.predict_on_batch(slice_.reshape(1,slice_.shape[0]))
             distArgMax = np.argmax(distribution)
             if distArgMax == 0:

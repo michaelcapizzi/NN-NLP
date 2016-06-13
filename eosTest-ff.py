@@ -50,10 +50,11 @@ model.buildModel()
 print("loading data")
 model.loadData(training_vectors, training_labels, testing_vectors, testing_labels)
 
-print("training_labels size: %s" %str(len(model.training_labels)))
+print("training")
+model.train(None, 0)
 
-# print("training")
-# model.train(None, 0)
+print("testing")
+model.test(None, 0)
 
 #
 # print("testing")
