@@ -1000,7 +1000,7 @@ class FF_keras:
             if not cutoff or c <= cutoff:
                 vector = np.fromstring(v, sep=",")
                 label = np.fromstring(l, sep=",")
-                if c % 10000 == 0:
+                if c % 30000 == 0:
                     print("importing data point number %s" %str(c))
                 self.training_vectors.append(vector)
                 self.training_labels.append(label)
