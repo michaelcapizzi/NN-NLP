@@ -3,7 +3,7 @@ import Models.Model as m
 import Models.Embedding as e
 import sys
 
-#script for when pre-processing of data is required
+#script for when pre-processing of data is required (will pickle data in the process)
 
 #sys.argv[1] = file to process for data
 #sys.argv[2] = number of lines to take from file

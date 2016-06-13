@@ -4,7 +4,7 @@ import Models.Embedding as e
 import sys
 
 
-#script for when pre-processing of data is NOT required
+#script for when pre-processing of data is NOT required (*i.e.* the pickled data exists already)
 
 #sys.argv[1] = file to process for data
 #sys.argv[2] = number of lines to take from file

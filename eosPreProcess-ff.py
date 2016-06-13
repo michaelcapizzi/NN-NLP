@@ -5,7 +5,7 @@ import numpy as np
 
 #script to solely convert EOS plain text data to vector representations to be used in FF models
 
-# python Utils/preProcessEOS-FF.py training_instances/segmenter_train.master training_instances/segmenter_test.master w2v_Goldberg.txt.gz 10 lemmatize training_instances/segmenter_train.csv training_instances/segmenter_test.csv
+# python Utils/eosPreProcess-ff.py training_instances/segmenter_train.master training_instances/segmenter_test.master w2v_Goldberg.txt.gz 10 lemmatize training_instances/segmenter_train.csv training_instances/segmenter_test.csv
 
 #to load
 #np.loadtxt(f, delimiter=",", newline="\n")
