@@ -51,32 +51,37 @@ model = m.FF_keras(hidden_layer_dims=hidden_layer_dims, activations=hidden_layer
 model.buildModel()
 
 print("loading data")
-model.loadData(training_vectors, training_labels, testing_vectors, testing_labels, number_training_points)
+tr_vec, tr_lab, te_vec, te_lab = model.loadData(training_vectors, training_labels, testing_vectors, testing_labels, number_training_points)
 
-print("training")
-model.train(None, 0, neg_sample)
+print(tr_vec.shape)
+print(tr_lab.shape)
+print(te_vec.shape)
+print(te_lab.shape)
 
-print("testing")
-model.test(None, 0)
-
-#save weights?
-if weights_location:
-    print("saving weights")
-    #TODO implement in FF_keras
-    # model.saveWeights(sys.argv[13])
-else:
-    print("ending without saving weights")
-
-
-print("hyperparameters")
-print("number of lines used", number_training_points)
-print("negative samples ignored", neg_sample)
-print("number of layers", len(hidden_layer_dims))
-print("hidden layer dims", hidden_layer_dims)
-print("hidden layer activations", hidden_layer_activations)
-print("hidden layer dropouts", hidden_layer_dropouts)
-print("window_size", window_size)
-print("number of epochs", num_epochs)
-print("loss function", loss_function)
-print("optimizer", optimizer)
-
+# print("training")
+# model.train(None, 0, neg_sample)
+#
+# print("testing")
+# model.test(None, 0)
+#
+# #save weights?
+# if weights_location:
+#     print("saving weights")
+#     #TODO implement in FF_keras
+#     # model.saveWeights(sys.argv[13])
+# else:
+#     print("ending without saving weights")
+#
+#
+# print("hyperparameters")
+# print("number of lines used", number_training_points)
+# print("negative samples ignored", neg_sample)
+# print("number of layers", len(hidden_layer_dims))
+# print("hidden layer dims", hidden_layer_dims)
+# print("hidden layer activations", hidden_layer_activations)
+# print("hidden layer dropouts", hidden_layer_dropouts)
+# print("window_size", window_size)
+# print("number of epochs", num_epochs)
+# print("loss function", loss_function)
+# print("optimizer", optimizer)
+#
