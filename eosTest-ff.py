@@ -69,6 +69,8 @@ else:
 
 
 print("hyperparameters")
+print("number of lines used", number_training_points)
+print("negative samples ignored", neg_sample)
 print("number of layers", len(hidden_layer_dims))
 print("hidden layer dims", hidden_layer_dims)
 print("hidden layer activations", hidden_layer_activations)

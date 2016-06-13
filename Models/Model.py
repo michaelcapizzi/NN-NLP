@@ -1030,6 +1030,8 @@ class FF_keras:
         #negative sample threshold
         neg_cutoff = float(1000 * neg_sample)
         for e in range(self.num_epochs):
+            #ignored negative datapoints
+            neg_ignored = 0
             #if file text must be processed
             #only relevant for first epoch
             if fPath and e == 0:
@@ -1072,10 +1074,11 @@ class FF_keras:
                 rand = np.random.randint(0,1000)
                 #implement random negative resampling
                 if np.argmax(label) == 0 or (np.argmax(label) == 1 and rand > neg_cutoff):
-                    print("keeping")
                     self.model.train_on_batch(slice_.reshape(1,slice_.shape[0]), label)
                 else:
-                    print("ignoring")
+                    neg_ignored+=1
+            print("number of ignored negative examples in epoch %s: %s" %(str(e + 1), str(neg_ignored)))
+
 
 #################################################
 
