@@ -1,14 +1,11 @@
-import PreProcessing as pre
+import Utils.PreProcessing as pre
 from gensim import models as g
 import sys
 import numpy as np
 
 #script to solely convert EOS plain text data to vector representations to be used in FF models
 
-# python Utils/eosPreProcess-ff.py training_instances/segmenter_train.master training_instances/segmenter_test.master w2v_Goldberg.txt.gz 10 lemmatize training_instances/segmenter_train.csv training_instances/segmenter_test.csv
-
-#to load
-#np.loadtxt(f, delimiter=",", newline="\n")
+# python Utils/eosPreProcess-ff.py training_instances/segmenter_train.master training_instances/segmenter_test.master w2v_Goldberg.txt.gz 10 true segmenter_train.csv segmenter_test.csv
 
 #sys.argv[1] = path to training file
 #sys.argv[2] = path to testing file

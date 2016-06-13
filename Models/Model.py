@@ -1077,8 +1077,8 @@ class FF_keras:
                     print("epoch", str(e + 1))
                     print("training instance %s of %s" %(str(i+1), str(len(self.training_vectors))))
                 rand = np.random.randint(0,1000)
-                #implement random negative resampling
-                if np.argmax(label) == 0 or (np.argmax(label) == 1 and rand >= neg_cutoff):
+                #random negative resampling
+                if np.argmax(label) == 0 or (np.argmax(label) == 1 and rand > neg_cutoff):
                     self.model.train_on_batch(slice_.reshape(1,slice_.shape[0]), label)
                     #bookkeeping
                     if np.argmax(label) == 0:

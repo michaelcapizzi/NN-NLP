@@ -1,0 +1,5 @@
+file,w2v,num_datapoints,neg_sample_rate,num_layers,dimensions,activations,dropouts,window_size,num_epochs,loss,optimizer,p,r,f1
+cocaForLM.txt,Gigaword,10k,.7,1,100,relu,0,3,3,binary_crossentropy,adagrad,.75,.05,.09
+cocaForLM.txt,Gigaword,10k,.7,2,100/100,relu/relu,0/0,3,3,binary_crossentropy,adagrad,.77,.06,.12
+cocaForLM.txt,Gigaword,10k,.7,2,100/100,relu/relu,0/0,2,3,binary_crossentropy,adagrad,
+cocaForLM.txt,Gigaword,1m,.7,2,100/100,relu/relu,0/0,3,3,binary_crossentropy,adagrad,
