@@ -899,6 +899,10 @@ class FF_keras:
         self.training_labels=[]
         self.testing_vectors=[]
         self.testing_labels=[]
+        self.training_X = None
+        self.training_y= None
+        self.testing_X = None
+        self.testing_y = None
 
 
 
@@ -986,7 +990,7 @@ class FF_keras:
     #load data
         #takes OPEN files as arguments
         #training_cutoff = how data points of training to use
-    def loadData(self, tr_vec, tr_lab, te_vec, te_lab, training_cutoff=0, asarray=False):
+    def loadData(self, tr_vec, tr_lab, te_vec, te_lab, training_cutoff=0):
         #determine if a limited number of lines is to be used
         if training_cutoff != 0:
             cutoff = training_cutoff
@@ -1020,10 +1024,6 @@ class FF_keras:
             self.testing_labels.append(label)
         te_vec.close()
         te_lab.close()
-
-        if asarray:
-            return np.asarray(self.training_vectors), np.asarray(self.training_labels), np.asarray(self.testing_vectors), np.asarray(self.testing_labels)
-
 
 
     #file = file to use for training
