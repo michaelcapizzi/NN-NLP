@@ -1078,7 +1078,7 @@ class FF_keras:
                     print("training instance %s of %s" %(str(i+1), str(len(self.training_vectors))))
                 rand = np.random.randint(0,1000)
                 #implement random negative resampling
-                if np.argmax(label) == 0 or (np.argmax(label) == 1 and rand > neg_cutoff):
+                if np.argmax(label) == 0 or (np.argmax(label) == 1 and rand >= neg_cutoff):
                     self.model.train_on_batch(slice_.reshape(1,slice_.shape[0]), label)
                     #bookkeeping
                     if np.argmax(label) == 0:
@@ -1149,7 +1149,7 @@ class FF_keras:
                 print("actual label", actual)
                 print("current precision", precision)
                 print("current recall", recall)
-                print("current f1", precision, recall)
+                print("current f1", eval.f1(precision, recall))
         finalPrecision = eval.precision(results.count("tp"), results.count("fp"))
         finalRecall = eval.recall(results.count("tp"), results.count("fn"))
         finalF1 = eval.f1(finalPrecision, finalRecall)
