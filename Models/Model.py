@@ -984,17 +984,28 @@ class FF_keras:
 #################################################
 
     #load data
-    def loadData(self, tr_vec, tr_lab, te_vec, te_lab):
+        #takes OPEN files as arguments
+        #training_cutoff = how data points of training to use
+    def loadData(self, tr_vec, tr_lab, te_vec, te_lab, training_cutoff=0):
+        #determine if a limited number of lines is to be used
+        if training_cutoff != 0:
+            cutoff = training_cutoff
+        else:
+            cutoff = None
+
         #line counter
         c = 0
         for v,l in izip(tr_vec, tr_lab):
             c+=1
-            vector = np.fromstring(v, sep=",")
-            label = np.fromstring(l, sep=",")
-            if c % 10000 == 0:
-                print("importing data point number %s" %str(c))
-            self.training_vectors.append(vector)
-            self.training_labels.append(label)
+            if not cutoff or c <= cutoff:
+                vector = np.fromstring(v, sep=",")
+                label = np.fromstring(l, sep=",")
+                if c % 1000 == 0:
+                    print("importing data point number %s" %str(c))
+                self.training_vectors.append(vector)
+                self.training_labels.append(label)
+            else:
+                break
         tr_vec.close()
         tr_lab.close()
 

@@ -11,6 +11,7 @@ import pickle
 #sys.argv[2] = training labels
 #sys.argv[3] = testing vectors
 #sys.argv[4] = testing labels
+#sys.argv[5] = w2v used = "Gigaword" or "Goldberg"
 #sys.argv[5] = hidden layer dimensions, *e.g.* '100 200 300'
 #sys.argv[6] = hidden layer activations, *e.g.* 'tanh tanh relu'
 #sys.argv[7] = hidden layer dropouts, *e.g.* '.5 .5 .5'
@@ -29,21 +30,24 @@ training_vectors = open(sys.argv[1], "rb")
 training_labels = open(sys.argv[2], "rb")
 testing_vectors = open(sys.argv[3], "rb")
 testing_labels = open(sys.argv[4], "rb")
-hidden_layer_dims = [int(h) for h in sys.argv[5].split(" ")]
-hidden_layer_activations = sys.argv[6].split(" ")
-hidden_layer_dropouts = [float(d) for d in sys.argv[7].split(" ")]
-window_size = int(sys.argv[8])
-num_epochs = int(sys.argv[9])
-loss_function = sys.argv[10]
-optimizer = sys.argv[11]
-if len(sys.argv) == 13:
-    weights_location = sys.argv[12]
+if sys.argv[5].startswith("Giga"):
+    w2v_size = 200
+elif sys.argv[6].startswith("Gold"):
+    w2v_size = 300
+hidden_layer_dims = [int(h) for h in sys.argv[6].split(" ")]
+hidden_layer_activations = sys.argv[7].split(" ")
+hidden_layer_dropouts = [float(d) for d in sys.argv[8].split(" ")]
+window_size = int(sys.argv[9])
+num_epochs = int(sys.argv[10])
+loss_function = sys.argv[11]
+optimizer = sys.argv[12]
+if len(sys.argv) == 14:
+    weights_location = sys.argv[13]
 
-w2vDimension = 200  #if Gigaword
-# w2vDimension = 300  #if Goldberg
+
 
 #build model
-model = m.FF_keras(hidden_layer_dims=hidden_layer_dims, activations=hidden_layer_activations, embeddingClass=None, w2vDimension=w2vDimension, window_size=window_size, hidden_dropouts=hidden_layer_dropouts, loss_function=loss_function, optimizer=optimizer, num_epochs=num_epochs)
+model = m.FF_keras(hidden_layer_dims=hidden_layer_dims, activations=hidden_layer_activations, embeddingClass=None, w2vDimension=w2v_size, window_size=window_size, hidden_dropouts=hidden_layer_dropouts, loss_function=loss_function, optimizer=optimizer, num_epochs=num_epochs)
 
 model.buildModel()
 
