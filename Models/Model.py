@@ -9,15 +9,13 @@ import Utils.PreProcessing as pre
 import Utils.Evaluation as eval
 import Data as d
 from itertools import izip
+from keras.callbacks import EarlyStopping
 
 
 
 
 
-#
-# from keras.callbacks import EarlyStopping
-# early_stopping = EarlyStopping(monitor='val_loss', patience=2)
-# model.fit(X, y, validation_split=0.2, callbacks=[early_stopping])
+#TODO how to use callbacks for earlystopping
 
 
 
@@ -99,6 +97,7 @@ class LSTM_keras:
         self.dropout_U = dropout_U
         self.loss_function = loss_function
         self.optimizer = optimizer
+        self.early_stopping = EarlyStopping(monitor='val_loss', patience=2)
         self.model_json = None
         self.model = Sequential()
         if embeddingLayerClass:
@@ -892,6 +891,7 @@ class FF_keras:
         self.loss_function=loss_function
         self.optimizer=optimizer
         self.num_epochs=num_epochs
+        self.early_stopping = EarlyStopping(monitor='val_loss', patience=2)
         self.model = Sequential()
         self.data=None
         self.processor=None

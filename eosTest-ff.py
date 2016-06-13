@@ -21,11 +21,6 @@ import pickle
 #sys.argv[11] = optimizer
 #sys.argv[12] = OPTIONAL location of .h5 file to save weights
 
-
-
-# print("loading embeddings")
-# w2v = g.Word2Vec.load_word2vec_format(sys.argv[5], binary=False)
-
 training_vectors = open(sys.argv[1], "rb")
 training_labels = open(sys.argv[2], "rb")
 testing_vectors = open(sys.argv[3], "rb")
@@ -43,8 +38,8 @@ loss_function = sys.argv[11]
 optimizer = sys.argv[12]
 if len(sys.argv) == 14:
     weights_location = sys.argv[13]
-
-
+else:
+    weights_location = None
 
 #build model
 model = m.FF_keras(hidden_layer_dims=hidden_layer_dims, activations=hidden_layer_activations, embeddingClass=None, w2vDimension=w2v_size, window_size=window_size, hidden_dropouts=hidden_layer_dropouts, loss_function=loss_function, optimizer=optimizer, num_epochs=num_epochs)
@@ -60,28 +55,22 @@ model.train(None, 0)
 print("testing")
 model.test(None, 0)
 
-#
-# print("testing")
-# model.test(None, None, lemmatize=lemmatize)
-#
-# #save weights?
-# if len(sys.argv) == 14:
-#     print("saving weights")
-#     #TODO implement in FF_keras
-#     # model.saveWeights(sys.argv[13])
-# else:
-#     print("ending without saving weights")
-#
-#
-# print("hyperparameters")
-# print("word2vec", w2vUsed)
-# print("lemmatize", str(lemmatize))
-# print("number of layers", len(hidden_layer_dims))
-# print("hidden layer dims", hidden_layer_dims)
-# print("hidden layer activations", hidden_layer_activations)
-# print("hidden layer dropouts", hidden_layer_dropouts)
-# print("window_size", window_size)
-# print("number of epochs", num_epochs)
-# print("loss function", loss_function)
-# print("optimizer", optimizer)
+#save weights?
+if weights_location:
+    print("saving weights")
+    #TODO implement in FF_keras
+    # model.saveWeights(sys.argv[13])
+else:
+    print("ending without saving weights")
+
+
+print("hyperparameters")
+print("number of layers", len(hidden_layer_dims))
+print("hidden layer dims", hidden_layer_dims)
+print("hidden layer activations", hidden_layer_activations)
+print("hidden layer dropouts", hidden_layer_dropouts)
+print("window_size", window_size)
+print("number of epochs", num_epochs)
+print("loss function", loss_function)
+print("optimizer", optimizer)
 
