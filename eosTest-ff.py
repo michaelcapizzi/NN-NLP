@@ -12,34 +12,36 @@ import pickle
 #sys.argv[3] = testing vectors
 #sys.argv[4] = testing labels
 #sys.argv[5] = number of training data points to use {0,31220325} *0 means all
-#sys.argv[6] = w2v used = "Gigaword" or "Goldberg"
-#sys.argv[7] = hidden layer dimensions, *e.g.* '100 200 300'
-#sys.argv[8] = hidden layer activations, *e.g.* 'tanh tanh relu'
-#sys.argv[9] = hidden layer dropouts, *e.g.* '.5 .5 .5'
-#sys.argv[10] = window size
-#sys.argv[11] = # of epochs
-#sys.argv[12] = loss function
-#sys.argv[13] = optimizer
-#sys.argv[14] = OPTIONAL location of .h5 file to save weights
+#sys.argv[6] = negative sampling (what percentage of negative examples to **ignore**)
+#sys.argv[7] = w2v used = "Gigaword" or "Goldberg"
+#sys.argv[8] = hidden layer dimensions, *e.g.* '100 200 300'
+#sys.argv[9] = hidden layer activations, *e.g.* 'tanh tanh relu'
+#sys.argv[10] = hidden layer dropouts, *e.g.* '.5 .5 .5'
+#sys.argv[11] = window size
+#sys.argv[12] = # of epochs
+#sys.argv[13] = loss function
+#sys.argv[14] = optimizer
+#sys.argv[15] = OPTIONAL location of .h5 file to save weights
 
 training_vectors = open(sys.argv[1], "rb")
 training_labels = open(sys.argv[2], "rb")
 testing_vectors = open(sys.argv[3], "rb")
 testing_labels = open(sys.argv[4], "rb")
 number_training_points = int(sys.argv[5])
-if sys.argv[6].startswith("Giga"):
+neg_sample = float(sys.argv[6])
+if sys.argv[7].startswith("Giga"):
     w2v_size = 200
-elif sys.argv[6].startswith("Gold"):
+elif sys.argv[7].startswith("Gold"):
     w2v_size = 300
-hidden_layer_dims = [int(h) for h in sys.argv[7].split(" ")]
-hidden_layer_activations = sys.argv[8].split(" ")
-hidden_layer_dropouts = [float(d) for d in sys.argv[9].split(" ")]
-window_size = int(sys.argv[10])
-num_epochs = int(sys.argv[11])
-loss_function = sys.argv[12]
-optimizer = sys.argv[13]
-if len(sys.argv) == 15:
-    weights_location = sys.argv[14]
+hidden_layer_dims = [int(h) for h in sys.argv[8].split(" ")]
+hidden_layer_activations = sys.argv[9].split(" ")
+hidden_layer_dropouts = [float(d) for d in sys.argv[10].split(" ")]
+window_size = int(sys.argv[11])
+num_epochs = int(sys.argv[12])
+loss_function = sys.argv[13]
+optimizer = sys.argv[14]
+if len(sys.argv) == 16:
+    weights_location = sys.argv[15]
 else:
     weights_location = None
 
@@ -52,7 +54,7 @@ print("loading data")
 model.loadData(training_vectors, training_labels, testing_vectors, testing_labels, number_training_points)
 
 print("training")
-model.train(None, 0)
+model.train(None, 0, neg_sample)
 
 print("testing")
 model.test(None, 0)

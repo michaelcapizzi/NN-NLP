@@ -1026,7 +1026,7 @@ class FF_keras:
     #num_lines = number of lines to use from training file
         #0 = all
     #negative sampling rate - double representing percentage of negative examples to *ignore*
-    def train(self, fPath, num_lines, lemmatize=True, neg_sample):
+    def train(self, fPath, num_lines, neg_sample, lemmatize=True):
         #negative sample threshold
         neg_cutoff = float(1000 * neg_sample)
         for e in range(self.num_epochs):
