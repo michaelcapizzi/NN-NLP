@@ -1105,8 +1105,8 @@ class FF_keras:
             print("negative examples in epoch %s: %s" %(str(e + 1), str(neg)))
             if save_data:
                 print("writing training data to .csv")
-                f_vector = open(f_vec + "-window=" + str(self.window_size) + "-negSample=" + str(neg_sample) + ".csv")
-                f_label = open(f_lab + "-window=" + str(self.window_size) + "-negSample=" + str(neg_sample) + ".csv")
+                f_vector = open(f_vec + "-window=" + str(self.window_size) + "-negSample=" + str(neg_sample) + ".csv", "wb")
+                f_label = open(f_lab + "-window=" + str(self.window_size) + "-negSample=" + str(neg_sample) + ".csv", "wb")
                 np.savetxt(f_vector, self.training_X, delimiter=",")
                 np.savetxt(f_label, self.training_y, delimiter=",")
 
