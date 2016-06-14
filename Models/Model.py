@@ -1157,7 +1157,7 @@ class FF_keras:
                 self.testing_y = actual
             elif save_data:
                 self.testing_X = np.vstack([self.testing_X, slice_])
-                self.testing_y = np.vstack([self.testing_y, slice_])
+                self.testing_y = np.vstack([self.testing_y, actual])
             distribution = self.model.predict_on_batch(slice_.reshape(1,slice_.shape[0]))
             distArgMax = np.argmax(distribution)
             if distArgMax == 0:
