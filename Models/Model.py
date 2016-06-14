@@ -1109,6 +1109,8 @@ class FF_keras:
                 f_label = open(f_lab + "-window=" + str(self.window_size) + "-negSample=" + str(neg_sample) + ".csv", "wb")
                 np.savetxt(f_vector, self.training_X, delimiter=",")
                 np.savetxt(f_label, self.training_y, delimiter=",")
+                f_vector.close()
+                f_label.close()
 
 
 
@@ -1184,6 +1186,8 @@ class FF_keras:
             f_label = open(f_lab + "-window=" + str(self.window_size) + ".csv", "wb")
             np.savetxt(f_vector, self.testing_X, delimiter=",")
             np.savetxt(f_label, self.testing_y, delimiter=",")
+            f_vector.close()
+            f_label.close()
         finalPrecision = eval.precision(results.count("tp"), results.count("fp"))
         finalRecall = eval.recall(results.count("tp"), results.count("fn"))
         finalF1 = eval.f1(finalPrecision, finalRecall)
