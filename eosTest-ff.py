@@ -33,6 +33,8 @@ if sys.argv[7].startswith("Giga"):
     w2v_size = 200
 elif sys.argv[7].startswith("Gold"):
     w2v_size = 300
+else:
+    w2v_size = 200
 hidden_layer_dims = [int(h) for h in sys.argv[8].split(" ")]
 hidden_layer_activations = sys.argv[9].split(" ")
 hidden_layer_dropouts = [float(d) for d in sys.argv[10].split(" ")]
