@@ -54,7 +54,7 @@ print("loading data")
 model.loadData(training_vectors, training_labels, testing_vectors, testing_labels, number_training_points)
 
 print("training")
-model.train(None, 0, neg_sample)
+model.train(None, 0, neg_sample, save_data=True, f_vec="training_instances/ff-Giga/training_X", f_lab="training_instances/ff-Giga/training_y")
 
 print("testing")
 model.test(None, 0)

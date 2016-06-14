@@ -1031,9 +1031,7 @@ class FF_keras:
         #0 = all
     #negative sampling rate - double representing percentage of negative examples to *ignore*
     #save_data = writes windowed X and y to file
-    def train(self, fPath, num_lines, neg_sample, save_data=False, lemmatize=True):
-        if save_data:
-            self.training_X = np.array([])
+    def train(self, fPath, num_lines, neg_sample, save_data=False, f_vec=None, f_lab=None, lemmatize=True):
         #negative sample threshold
         neg_cutoff = float(1000 * neg_sample)
         for e in range(self.num_epochs):
@@ -1093,11 +1091,24 @@ class FF_keras:
                         pos+=1
                     else:
                         neg+=1
+                    #save data from first epoch only
+                    if save_data and i == 0 and e == 0:
+                        self.training_X = slice_
+                        self.training_y = label
+                    elif save_data and e == 0:
+                        self.training_X = np.vstack([self.training_X, slice_])
+                        self.training_y = np.vstack([self.training_y, label])
                 else:
                     neg_ignored+=1
             print("number of ignored negative examples in epoch %s: %s" %(str(e + 1), str(neg_ignored)))
             print("positive examples in epoch %s: %s" %(str(e + 1), str(pos)))
             print("negative examples in epoch %s: %s" %(str(e + 1), str(neg)))
+            if save_data:
+                print("writing training data to .csv")
+                f_vector = open(f_vec + "-window=" + str(self.window_size) + "-negSample=" + str(neg_sample) + ".csv")
+                f_label = open(f_lab + "-window=" + str(self.window_size) + "-negSample=" + str(neg_sample) + ".csv")
+                np.savetxt(f_vector, self.training_X, delimiter=",")
+                np.savetxt(f_label, self.training_y, delimiter=",")
 
 
 #################################################
