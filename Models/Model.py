@@ -1268,8 +1268,7 @@ class FF_keras:
     #tests directly from y
         #batch=batch size
     def quickTest(self, X, y, batch):
-        self.model.evaluate(X, y, batch_size=batch)
-
+        return self.model.evaluate(X, y, batch_size=batch)
 
 #################################################
 

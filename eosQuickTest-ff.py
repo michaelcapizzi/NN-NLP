@@ -58,8 +58,10 @@ print("training")
 model.quickTrain(model.training_X, model.training_y, batch=batch_size, eps=num_epochs)
 
 print("testing")
-model.quickTest(model.testing_X, model.testing_y, batch=batch_size)
+scores = model.quickTest(model.testing_X, model.testing_y, batch=batch_size)
 
+print("loss", scores[0])
+print("accuracy", scores[1])
 
 #save weights?
 if weights_location:
