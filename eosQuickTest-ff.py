@@ -6,6 +6,8 @@ import pickle
 #script for running feed forward neural net over same training and testing data as used in original segmentor
 
 #takes X and y and trains/tests in batch
+#batch size must be divisible by both training and testing data
+    #2 or 4 or 8 or 16
 
 #sys.argv[1] = training vectors
 #sys.argv[2] = training labels

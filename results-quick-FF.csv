@@ -1,0 +1,2 @@
+file,w2v,num_datapoints,neg_sample_rate,num_layers,dimensions,activations,dropouts,window_size,num_epochs,batch_size,loss,optimizer,loss,accuracy
+
