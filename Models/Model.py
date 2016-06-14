@@ -891,7 +891,7 @@ class FF_keras:
         self.loss_function=loss_function
         self.optimizer=optimizer
         self.num_epochs=num_epochs
-        self.early_stopping = EarlyStopping(monitor='val_loss', patience=2)
+        self.early_stopping = EarlyStopping(monitor='train_loss', patience=5)
         self.model = Sequential()
         self.data=None
         self.processor=None
@@ -934,21 +934,6 @@ class FF_keras:
                 self.model.add(Activation(
                         activation=j
                 ))
-            #for last layer
-            # elif c == len(self.hidden_layer_dims):
-            #     #add dense
-            #     self.model.add(Dense(
-            #         output_dim=i,
-            #         init="lecun_uniform"
-            #     ))
-            #     #add dropout
-            #     self.model.add(Dropout(
-            #         p=k
-            #     ))
-            #     #add activation
-            #     self.model.add(Activation(
-            #         activation=j
-            #     ))
             #for middle layers
             else:
                 #add dense
@@ -978,6 +963,7 @@ class FF_keras:
                 optimizer=self.optimizer,
                 loss=self.loss_function,
                 metrics=["accuracy"]
+                # metrics=["accuracy", "precision", "recall", "f1"]
         )
 
         #print model summary
@@ -986,6 +972,7 @@ class FF_keras:
 
 
 #################################################
+
 
     #load data
         #takes OPEN files as arguments
@@ -1024,6 +1011,9 @@ class FF_keras:
             self.testing_labels.append(label)
         te_vec.close()
         te_lab.close()
+
+
+#################################################
 
 
     #file = file to use for training
@@ -1112,8 +1102,6 @@ class FF_keras:
                 f_label.close()
 
 
-
-
 #################################################
 
     #test a trained model on test data file to be loaded
@@ -1195,8 +1183,92 @@ class FF_keras:
         print("final f1", finalF1)
 
 
+    #################################################
+
+    ####quick methods#####
+    #used when X and y are already in numpy format
+        #from save_data during training and testing
+
+    #needs to override the existing model if to be used for quickTrain/Test
+    def quickBuildModel(self, batch_size):
+        #for each layer
+        #i = number of nodes in hidden layer
+        #j = activation of hidden layer
+        #k = dropout for hidden layer
+        #counter for layers
+        c = 0
+        for i,j,k in zip(self.hidden_layer_dims,self.activations, self.hidden_dropouts):
+            c+=1
+            #for first layer
+            if c == 1:
+                #add dense with input_shape
+                self.model.add(Dense(
+                        output_dim=i,
+                        init="lecun_uniform",
+                        batch_input_shape=(batch_size,self.w2vDimension*2*self.window_size)
+                ))
+                #add dropout
+                self.model.add(Dropout(
+                        p=k
+                ))
+                #add activation
+                self.model.add(Activation(
+                        activation=j
+                ))
+            #for middle layers
+            else:
+                #add dense
+                self.model.add(Dense(
+                        output_dim=i,
+                        init="lecun_uniform"
+                ))
+                #add dropout
+                self.model.add(Dropout(
+                        p=k
+                ))
+                #add activation
+                self.model.add(Activation(
+                        activation=j
+                ))
+
+        #add final softmax layer
+        self.model.add(Dense(
+                output_dim=2
+        ))
+        self.model.add(Activation(
+                activation="softmax"
+        ))
+
+        #compile
+        self.model.compile(
+                optimizer=self.optimizer,
+                loss=self.loss_function,
+                metrics=["accuracy"]
+                # metrics=["accuracy", "precision", "recall", "f1"]
+        )
+
+        #print model summary
+        self.model.summary()
+
+    #loads from .csv, requires open files as arguments
+    def quickLoad(self, train_X, train_y, test_X, test_y):
+        self.training_X = np.loadtxt(train_X, delimiter=",")
+        self.training_y = np.loadtxt(train_y, delimiter=",")
+        self.testing_X = np.loadtxt(test_X, delimiter=",")
+        self.testing_y = np.loadtxt(test_y, delimiter=",")
 
 
+    #trains directly from X
+        #batch=batch size
+        #epochs=number of epochs
+    def quickTrain(self, X, y, batch, eps):
+        self.model.fit(X, y, batch_size=batch, nb_epoch=eps, callbacks=[self.early_stopping])
+
+
+    #tests directly from y
+        #batch=batch size
+    def quickTest(self, X, y, batch):
+        self.model.evaluate(X, y, batch_size=batch)
 
 
 #################################################
