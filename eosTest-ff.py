@@ -57,7 +57,7 @@ print("training")
 model.train(None, 0, neg_sample, save_data=True, f_vec="training_instances/ff-Giga/training_X", f_lab="training_instances/ff-Giga/training_y")
 
 print("testing")
-model.test(None, 0)
+model.test(None, 0, save_data=True, f_vec="training_instances/ff-Giga/testing_X", f_lab="training_instances/ff-Giga/testing_y")
 
 #save weights?
 if weights_location:

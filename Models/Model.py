@@ -1111,10 +1111,13 @@ class FF_keras:
                 np.savetxt(f_label, self.training_y, delimiter=",")
 
 
+
+
 #################################################
 
     #test a trained model on test data file to be loaded
-    def test(self, fPath, num_lines, lemmatize=True):
+    #save_data = writes windowed X and y to file
+    def test(self, fPath, num_lines, save_data=False, f_vec=None, f_lab=None, lemmatize=True):
         results = []
         if fPath:
             self.testing_vectors = []
@@ -1147,6 +1150,12 @@ class FF_keras:
         for i in range(len(self.testing_vectors)):
             actual = self.testing_labels[i].reshape((1,2))
             slice_ = self.getSlice(self.testing_vectors, i)
+            if save_data and i == 0:
+                self.testing_X = slice_
+                self.testing_y = actual
+            elif save_data:
+                self.testing_X = np.vstack([self.testing_X, slice_])
+                self.testing_y = np.vstack([self.testing_y, slice_])
             distribution = self.model.predict_on_batch(slice_.reshape(1,slice_.shape[0]))
             distArgMax = np.argmax(distribution)
             if distArgMax == 0:
@@ -1169,12 +1178,19 @@ class FF_keras:
                 print("current precision", precision)
                 print("current recall", recall)
                 print("current f1", eval.f1(precision, recall))
+        if save_data:
+            print("writing testing data to .csv")
+            f_vector = open(f_vec + "-window=" + str(self.window_size) + ".csv", "wb")
+            f_label = open(f_lab + "-window=" + str(self.window_size) + ".csv", "wb")
+            np.savetxt(f_vector, self.testing_X, delimiter=",")
+            np.savetxt(f_label, self.testing_y, delimiter=",")
         finalPrecision = eval.precision(results.count("tp"), results.count("fp"))
         finalRecall = eval.recall(results.count("tp"), results.count("fn"))
         finalF1 = eval.f1(finalPrecision, finalRecall)
         print("final precision", finalPrecision)
         print("final recall", finalRecall)
         print("final f1", finalF1)
+
 
 
 
