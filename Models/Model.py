@@ -1390,17 +1390,15 @@ class Conv_keras:
             b_regularizer=self.b_regularizer
         ))
 
+        #build pooling layer
         pool_size = self.model.layers[0].get_output_shape_at(0)[1]      #output size of convolutional layer
                                                                             #used to reduce output of pooling layer to 1D
         if self.pool_type == "max":
-            self.poolLayer = MaxPooling1D(pool_length=pool_size)
+            self.model.add(MaxPooling1D(pool_length=pool_size))
         elif self.pool_type == "avg":
-            self.poolLayer = AveragePooling1D(pool_length=pool_size)
+            self.model.add(AveragePooling1D(pool_length=pool_size))
         else:
-            self.poolLayer = MaxPooling1D(pool_length=pool_size)
-
-        #build pooling layer
-        self.model.add(self.poolLayer)
+            self.model.add(MaxPooling1D(pool_length=pool_size))
 
         #compile
         self.model.compile(
