@@ -6,7 +6,7 @@ cocaForLM.txt,Gigaword,500k,.99,2,100/100,relu/relu,.5/.5,2,10,1,binary_crossent
 cocaForLM.txt,Gigaword,500k,.99,1,1000,relu,0,2,10,1,binary_crossentropy,adagrad,l2,l2,.047,.989,1.41,.59,.11,.95,.20
 cocaForLM.txt,Gigaword,500k,.99,1,500,relu,0,2,10,1,binary_crossentropy,adagrad,l2,l2,.069,.982,1.25,.60,.11,.94,.20
 cocaForLM.txt,Gigaword,500k,.99,2,100/100,relu/relu,.5/.5,2,10,1,binary_crossentropy,adagrad,l2,l2,.179,.936,1.21,.56,.10,.95,.18
-cocaForLM.txt,Gigaword,500k,.99,3,500/300/100,relu/relu/relu,0/0/0,2,10,1,binary_crossentropy,adagrad,l2,l2,
+cocaForLM.txt,Gigaword,500k,.99,3,500/300/100,relu/relu/relu,0/0/0,2,10,1,binary_crossentropy,adagrad,l2,l2,.022,.992,2.82,.59,.11,.93,.20
 
 
 
