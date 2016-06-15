@@ -3,11 +3,15 @@ import Models.Model as m
 import sys
 import pickle
 
+
 #script for running feed forward neural net over same training and testing data as used in original segmentor
 
 #takes X and y and trains/tests in batch
 #batch size must be divisible by both training and testing data
     #2 or 4 or 8 or 16
+
+#TODO figure out how to drop rows from the training and/or testing so that batch sizes work
+#TODO use sci-kitlearn metrics: http://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics
 
 #sys.argv[1] = training vectors
 #sys.argv[2] = training labels
@@ -22,7 +26,9 @@ import pickle
 #sys.argv[11] = # of epochs
 #sys.argv[12] = loss function
 #sys.argv[13] = optimizer
-#sys.argv[14] = OPTIONAL location of .h5 file to save weights
+#sys.argv[14] = w_regularizer
+#sys.argv[15] = b_regularizer
+#sys.argv[16] = OPTIONAL location of .h5 file to save weights
 
 training_vectors = open(sys.argv[1], "rb")
 training_labels = open(sys.argv[2], "rb")
@@ -42,13 +48,21 @@ hidden_layer_dropouts = [float(d) for d in sys.argv[10].split(" ")]
 num_epochs = int(sys.argv[11])
 loss_function = sys.argv[12]
 optimizer = sys.argv[13]
-if len(sys.argv) == 15:
-    weights_location = sys.argv[14]
+if sys.argv[14] == "None" or sys.argv[14] == "none" or sys.argv[14] == "":
+    w_reg = None
+else:
+    w_reg = sys.argv[14]
+if sys.argv[15] == "None" or sys.argv[15] == "none" or sys.argv[15] == "":
+    b_reg = None
+else:
+    b_reg = sys.argv[15]
+if len(sys.argv) == 17:
+    weights_location = sys.argv[16]
 else:
     weights_location = None
 
 #build model
-model = m.FF_keras(hidden_layer_dims=hidden_layer_dims, activations=hidden_layer_activations, embeddingClass=None, w2vDimension=w2v_size, window_size=window_size, hidden_dropouts=hidden_layer_dropouts, loss_function=loss_function, optimizer=optimizer, num_epochs=num_epochs)
+model = m.FF_keras(hidden_layer_dims=hidden_layer_dims, activations=hidden_layer_activations, embeddingClass=None, w2vDimension=w2v_size, window_size=window_size, hidden_dropouts=hidden_layer_dropouts, loss_function=loss_function, optimizer=optimizer, num_epochs=num_epochs, W_regularizer=w_reg, b_regularizer=b_reg)
 
 print("building model")
 model.quickBuildModel(batch_size=batch_size)
@@ -64,6 +78,13 @@ scores = model.quickTest(model.testing_X, model.testing_y, batch=batch_size)
 
 print("loss", scores[0])
 print("accuracy", scores[1])
+print("precision", scores[2])
+print("recall", scores[3])
+print("f1", scores[4])
+
+
+
+
 
 #save weights?
 if weights_location:

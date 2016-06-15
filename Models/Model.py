@@ -1,5 +1,7 @@
 from keras.models import *
 from keras.layers import *
+from keras.regularizers import *
+from keras.callbacks import EarlyStopping
 import numpy as np
 np.random.seed(1982)  # to guarantee same randomizations each test
 from random import shuffle
@@ -9,15 +11,6 @@ import Utils.PreProcessing as pre
 import Utils.Evaluation as eval
 import Data as d
 from itertools import izip
-from keras.callbacks import EarlyStopping
-
-
-
-
-
-#TODO how to use callbacks for earlystopping
-
-
 
 #pickles a given vector to a given location
 def pickleData(vector, location):
@@ -588,9 +581,9 @@ class LSTM_keras:
                 finalTN = allResults.count("tn")
                 finalFP = allResults.count("fp")
                 finalFN = allResults.count("fn")
-                finalPrecision = eval.precision(finalTP, finalFP)
-                finalRecall = eval.recall(finalTP, finalFN)
-                finalF1 = eval.f1(finalPrecision, finalRecall)
+                finalPrecision = eval.precision_manual(finalTP, finalFP)
+                finalRecall = eval.recall_manual(finalTP, finalFN)
+                finalF1 = eval.f1_manual(finalPrecision, finalRecall)
                 print("final precision", finalPrecision)
                 print("final recall", finalRecall)
                 print("final f1", finalF1)
@@ -611,9 +604,9 @@ class LSTM_keras:
                 finalTN = allResults.count("tn")
                 finalFP = allResults.count("fp")
                 finalFN = allResults.count("fn")
-                finalPrecision = eval.precision(finalTP, finalFP)
-                finalRecall = eval.recall(finalTP, finalFN)
-                finalF1 = eval.f1(finalPrecision, finalRecall)
+                finalPrecision = eval.precision_manual(finalTP, finalFP)
+                finalRecall = eval.recall_manual(finalTP, finalFN)
+                finalF1 = eval.f1_manual(finalPrecision, finalRecall)
                 print("final precision", finalPrecision)
                 print("final recall", finalRecall)
                 print("final f1", finalF1)
@@ -764,9 +757,9 @@ class LSTM_keras:
         tn = results.count("tn")
         fp = results.count("fp")
         fn = results.count("fn")
-        precision = eval.precision(tp, fp)
-        recall = eval.recall(tp, fn)
-        f1 = eval.f1(precision, recall)
+        precision = eval.precision_manual(tp, fp)
+        recall = eval.recall_manual(tp, fn)
+        f1 = eval.f1_manual(precision, recall)
         print("sentence precision", precision)
         print("sentence recall", recall)
         print("sentence f1", f1)
@@ -813,9 +806,9 @@ class LSTM_keras:
         tn = results.count("tn")
         fp = results.count("fp")
         fn = results.count("fn")
-        precision = eval.precision(tp, fp)
-        recall = eval.recall(tp, fn)
-        f1 = eval.f1(precision, recall)
+        precision = eval.precision_manual(tp, fp)
+        recall = eval.recall_manual(tp, fn)
+        f1 = eval.f1_manual(precision, recall)
         print("sentence precision", precision)
         print("sentence recall", recall)
         print("sentence f1", f1)
@@ -885,13 +878,14 @@ class FF_keras:
         self.b_regularizer=b_regularizer
         self.W_constraint=W_constraint
         self.b_constraint=b_constraint
-        self.loss_regularizer=loss_regularizer
+        self.loss_regularizer=loss_regularizer      #activity_regularizer?
         self.bias=bias
         self.hidden_dropouts=hidden_dropouts
         self.loss_function=loss_function
         self.optimizer=optimizer
         self.num_epochs=num_epochs
-        self.early_stopping = EarlyStopping(monitor='train_loss', patience=5)
+        # self.early_stopping = EarlyStopping(monitor='val_loss', patience=2)
+        self.early_stopping = EarlyStopping(monitor='loss', patience=2)
         self.model = Sequential()
         self.data=None
         self.processor=None
@@ -924,7 +918,9 @@ class FF_keras:
                 self.model.add(Dense(
                     output_dim=i,
                     init="lecun_uniform",
-                    batch_input_shape=(1,self.w2vDimension*2*self.window_size)
+                    batch_input_shape=(1,self.w2vDimension*2*self.window_size),
+                    W_regularizer=self.W_regularizer,
+                    b_regularizer=self.b_regularizer
                 ))
                 #add dropout
                 self.model.add(Dropout(
@@ -939,7 +935,9 @@ class FF_keras:
                 #add dense
                 self.model.add(Dense(
                     output_dim=i,
-                    init="lecun_uniform"
+                    init="lecun_uniform",
+                    W_regularizer=self.W_regularizer,
+                    b_regularizer=self.b_regularizer
                 ))
                 #add dropout
                 self.model.add(Dropout(
@@ -952,7 +950,9 @@ class FF_keras:
 
         #add final softmax layer
         self.model.add(Dense(
-            output_dim=2
+            output_dim=2,
+            W_regularizer=self.W_regularizer,
+            b_regularizer=self.b_regularizer
         ))
         self.model.add(Activation(
                 activation="softmax"
@@ -1137,20 +1137,24 @@ class FF_keras:
             print("stopping server")
             self.processor.stop_server()
         for i in range(len(self.testing_vectors)):
-            actual = self.testing_labels[i].reshape((1,2))
+            actual_raw = self.testing_labels[i].reshape((1,2))
             slice_ = self.getSlice(self.testing_vectors, i)
             if save_data and i == 0:
                 self.testing_X = slice_
-                self.testing_y = actual
+                self.testing_y = actual_raw
             elif save_data:
                 self.testing_X = np.vstack([self.testing_X, slice_])
-                self.testing_y = np.vstack([self.testing_y, actual])
+                self.testing_y = np.vstack([self.testing_y, actual_raw])
             distribution = self.model.predict_on_batch(slice_.reshape(1,slice_.shape[0]))
             distArgMax = np.argmax(distribution)
             if distArgMax == 0:
                 predicted = 1
             else:
                 predicted = 0
+            if np.argmax(actual_raw) == 0:
+                actual = 1
+            else:
+                actual = 0
             if np.argmax(actual) == 0 and predicted == 1:
                 results.append("fp")
             elif np.argmax(actual) == 1 and predicted == 0:
@@ -1158,15 +1162,15 @@ class FF_keras:
             elif np.argmax(actual) == 1 and predicted == 1:
                 results.append("tp")
             if i % 5000 == 0 or i == 0:
-                precision = eval.precision(results.count("tp"), results.count("fp"))
-                recall = eval.recall(results.count("tp"), results.count("fn"))
+                precision = eval.precision_manual(results.count("tp"), results.count("fp"))
+                recall = eval.recall_manual(results.count("tp"), results.count("fn"))
                 print("testing instance %s of %s" %(str(i+1), str(len(self.testing_vectors))))
                 print("predicted distribution", distribution)
                 print("predicted label", predicted)
-                print("actual label", actual)
+                print("actual label", actual_raw)
                 print("current precision", precision)
                 print("current recall", recall)
-                print("current f1", eval.f1(precision, recall))
+                print("current f1", eval.f1_manual(precision, recall))
         if save_data:
             print("writing testing data to .csv")
             f_vector = open(f_vec + "-window=" + str(self.window_size) + ".csv", "wb")
@@ -1175,9 +1179,9 @@ class FF_keras:
             np.savetxt(f_label, self.testing_y, delimiter=",")
             f_vector.close()
             f_label.close()
-        finalPrecision = eval.precision(results.count("tp"), results.count("fp"))
-        finalRecall = eval.recall(results.count("tp"), results.count("fn"))
-        finalF1 = eval.f1(finalPrecision, finalRecall)
+        finalPrecision = eval.precision_manual(results.count("tp"), results.count("fp"))
+        finalRecall = eval.recall_manual(results.count("tp"), results.count("fn"))
+        finalF1 = eval.f1_manual(finalPrecision, finalRecall)
         print("final precision", finalPrecision)
         print("final recall", finalRecall)
         print("final f1", finalF1)
@@ -1262,13 +1266,28 @@ class FF_keras:
         #batch=batch size
         #epochs=number of epochs
     def quickTrain(self, X, y, batch, eps):
+        # self.model.fit(X, y, batch_size=batch, nb_epoch=eps, callbacks=[self.early_stopping], validation_data=(X,y))
         self.model.fit(X, y, batch_size=batch, nb_epoch=eps, callbacks=[self.early_stopping])
 
 
     #tests directly from y
         #batch=batch size
+    #returns    [0] = loss
+    #           [1] = accuracy
+    #           [2] = precision
     def quickTest(self, X, y, batch):
-        return self.model.evaluate(X, y, batch_size=batch)
+
+        scores = self.model.evaluate(X, y, batch_size=batch)
+
+        raw_preds = self.model.predict(X, batch_size=batch, verbose=1)
+        preds = [np.argmax(d1) for d1 in raw_preds]
+        y = [np.argmax(d2) for d2 in y]
+
+        p = eval.precision_sk(y, preds)
+        r = eval.recall_sk(y, preds)
+        f1 = eval.f1_sk(y, preds)
+
+        return scores[0], scores[1], p, r, f1
 
 #################################################
 
