@@ -1,4 +1,8 @@
 file,w2v,num_datapoints,neg_sample_rate,num_layers,dimensions,activations,dropouts,window_size,num_epochs,batch_size,loss,optimizer,W_regularizer,b_regularizer,tr_loss,tr_acc,te_loss,te_acc,p,r,f1,
 cocaForLM.txt,Gigaword,500k,.99,2,100/100,relu/relu,0/0,2,3,1,binary_crossentropy,adagrad,none,none,.186,.932,1.16,.56,.10,.94,.18
-cocaForLM.txt,Gigaword,500k,.99,2,100/100,relu/relu,0/0,2,3,1,binary_crossentropy,adagrad,l2,l2,.186,.932,1.16,.56,.10,.94,.18
+cocaForLM.txt,Gigaword,500k,.99,2,100/100,relu/relu,0/0,2,3,1,binary_crossentropy,adagrad,l2,l2,.188,.931,1.16,.55,.10,.94,.18
+cocaForLM.txt,Gigaword,500k,.99,2,100/100,relu/relu,0/0,2,10,1,binary_crossentropy,adagrad,l2,l2,.056,.985,1.66,.61,.11,.92,.20
+cocaForLM.txt,Gigaword,500k,.99,2,1000,relu,0,2,10,1,binary_crossentropy,adagrad,l2,l2,.047,.989,1.41,.59,.11,.95,.20
+cocaForLM.txt,Gigaword,500k,.99,2,500,relu,0,2,10,1,binary_crossentropy,adagrad,l2,l2,
+
 

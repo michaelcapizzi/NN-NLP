@@ -107,4 +107,6 @@ print("hidden layer dropouts", hidden_layer_dropouts)
 print("number of epochs", num_epochs)
 print("loss function", loss_function)
 print("optimizer", optimizer)
+print("W_regularizer", w_reg)
+print("b_regularizer", b_reg)
 
