@@ -1326,8 +1326,8 @@ class Conv_keras:
     def __init__(self,
                  num_filters=500,   #output vector of convolution
                  filter_length=2,   #size of convolution
-                 poolType="max",    #"max" or "avg"
-                 pool_size=2,       #factor by which to reduce the convolution size
+                 pool_type="max",    #"max" or "avg"
+                 # pool_size=2,       #factor by which to reduce the convolution size
                     #TODO how to figure out what pool_size should be so that output of MaxPool layer is 1D?
                  hidden_layer_dims=[100],
                  activations=["relu"],
@@ -1347,12 +1347,7 @@ class Conv_keras:
                  ):
         self.num_filters=num_filters
         self.filter_length=filter_length
-        if poolType == "max":
-            self.poolLayer = MaxPooling1D(pool_length=pool_size)
-        elif poolType == "avg":
-            self.poolLayer = AveragePooling1D(pool_length=pool_size)
-        else:
-            self.poolLayer = MaxPooling1D(pool_length=pool_size)
+        self.pool_type=pool_type
         self.hidden_layer_dims=hidden_layer_dims
         self.activations=activations
         self.embeddingClass=embeddingClass
@@ -1394,6 +1389,16 @@ class Conv_keras:
             W_regularizer=self.W_regularizer,
             b_regularizer=self.b_regularizer
         ))
+
+        pool_size = self.model.layers[0].get_output_shape_at(0)[1]      #output size of convolutional layer
+                                                                            #used to reduce output of pooling layer to 1D
+        if self.pool_type == "max":
+            self.poolLayer = MaxPooling1D(pool_length=pool_size)
+        elif self.pool_type == "avg":
+            self.poolLayer = AveragePooling1D(pool_length=pool_size)
+        else:
+            self.poolLayer = MaxPooling1D(pool_length=pool_size)
+
         #build pooling layer
         self.model.add(self.poolLayer)
 
