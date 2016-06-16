@@ -12,6 +12,9 @@ import Utils.Evaluation as eval
 import Data as d
 from itertools import izip
 
+#################################################
+#################################################
+
 #pickles a given vector to a given location
 def pickleData(vector, location):
     f = open(location, "wb")
@@ -29,10 +32,11 @@ def unpickleData(location):
     return saved
 
 #################################################
+#################################################
 
 class LSTM_keras:
     """
-    builds an LSTM using keras front end that can be used for language modeling or sentence segmentation.  See example: http://keras.io/examples/#sequence-classification-with-lstm
+    builds an LSTM using `keras` front end that can be used for language modeling or sentence segmentation.
     :param purpose If `EOS`, used for determining end-of-sentence, if `LM` used for language modeling
     :param num_layers Number of `LSTM` layers
     :param embeddingLayerClass Embedding_keras class (see Embedding) if vectors are to be learned
@@ -848,10 +852,14 @@ class LSTM_keras:
 
 
 
-#########################################################################################
+#################################################
+#################################################
+
 
 class FF_keras:
-
+    """
+        builds a vanilla feed-forward neural network using `keras` front end that can be used for sentence segmentation.
+    """
     def __init__(self,
                  hidden_layer_dims=[100],
                  activations=["relu"],
@@ -867,7 +875,7 @@ class FF_keras:
                  hidden_dropouts=[0],
                  loss_function="binary_crossentropy",
                  optimizer="adagrad",
-                 num_epochs=5,
+                 num_epochs=10,
                  ):
         self.hidden_layer_dims=hidden_layer_dims
         self.activations=activations
@@ -898,10 +906,7 @@ class FF_keras:
         self.testing_X = None
         self.testing_y = None
 
-
-
 #################################################
-
 
     def buildModel(self):
         #for each layer
@@ -963,7 +968,6 @@ class FF_keras:
                 optimizer=self.optimizer,
                 loss=self.loss_function,
                 metrics=["accuracy"]
-                # metrics=["accuracy", "precision", "recall", "f1"]
         )
 
         #print model summary
@@ -1311,5 +1315,97 @@ class FF_keras:
         return np.concatenate(slice_)
 
 
+#################################################
+#################################################
 
+class Conv_keras:
+    """
+    builds a convolutional neural network using `keras` front end that can be used for sentence segmentation.
+    """
 
+    def __init__(self,
+                 num_filters=500,   #output vector of convolution
+                 filter_length=2,   #size of convolution
+                 pool_type="max",    #"max" or "avg"
+                 # pool_size=2,       #factor by which to reduce the convolution size
+                    #TODO how to figure out what pool_size should be so that output of MaxPool layer is 1D?
+                 hidden_layer_dims=[100],
+                 activations=["relu"],
+                 embeddingClass=None,
+                 w2vDimension=None,
+                 window_size=3,
+                 W_regularizer=None,
+                 b_regularizer=None,
+                 W_constraint=None,
+                 b_constraint=None,
+                 loss_regularizer=None,
+                 bias=True,
+                 hidden_dropouts=[0],
+                 loss_function="binary_crossentropy",
+                 optimizer="adagrad",
+                 num_epochs=10,
+                 ):
+        self.num_filters=num_filters
+        self.filter_length=filter_length
+        self.pool_type=pool_type
+        self.hidden_layer_dims=hidden_layer_dims
+        self.activations=activations
+        self.embeddingClass=embeddingClass
+        self.w2vDimension=w2vDimension
+        self.window_size=window_size
+        self.W_regularizer=W_regularizer
+        self.b_regularizer=b_regularizer
+        self.W_constraint=W_constraint
+        self.b_constraint=b_constraint
+        self.loss_regularizer=loss_regularizer      #activity_regularizer?
+        self.bias=bias
+        self.hidden_dropouts=hidden_dropouts
+        self.loss_function=loss_function
+        self.optimizer=optimizer
+        self.num_epochs=num_epochs
+        self.early_stopping = EarlyStopping(monitor='loss', patience=2)
+        self.model = Sequential()
+        self.data=None
+        self.processor=None
+        self.training_vectors=[]
+        self.training_labels=[]
+        self.testing_vectors=[]
+        self.testing_labels=[]
+        self.training_X = None
+        self.training_y= None
+        self.testing_X = None
+        self.testing_y = None
+
+#################################################
+
+    def buildModel(self):
+        #build convolutional layer
+        self.model.add(Convolution1D(
+            nb_filter=self.num_filters,
+            filter_length=self.filter_length,
+            init="lecun_uniform",
+            # batch_input_shape=(1,self.window_size * 2, self.w2vDimension),
+            input_shape=(self.window_size * 2, self.w2vDimension),
+            W_regularizer=self.W_regularizer,
+            b_regularizer=self.b_regularizer
+        ))
+
+        #build pooling layer
+        pool_size = self.model.layers[0].get_output_shape_at(0)[1]      #output size of convolutional layer
+                                                                            #used to reduce output of pooling layer to 1D
+        if self.pool_type == "max":
+            self.model.add(MaxPooling1D(pool_length=pool_size))
+        elif self.pool_type == "avg":
+            self.model.add(AveragePooling1D(pool_length=pool_size))
+        else:
+            self.model.add(MaxPooling1D(pool_length=pool_size))
+
+        #compile
+        self.model.compile(
+                optimizer=self.optimizer,
+                loss=self.loss_function,
+                metrics=["accuracy"]
+        )
+
+        #print model summary
+        self.model.summary()
